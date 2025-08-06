@@ -1,0 +1,46 @@
+# Flutter/Dart/Pub related
+.dart_tool/
+.packages
+.pub-cache/
+build/
+.idea/
+.flutter-plugins
+.flutter-plugins-dependencies
+.melos_tool/
+
+# Generated files
+pubspec.lock
+
+# iOS/Xcode
+ios/Pods/
+ios/.symlinks/
+ios/Flutter/Flutter.framework
+ios/Flutter/Flutter.podspec
+ios/Flutter/Generated.xcconfig
+ios/Runner.xcworkspace/
+ios/Runner.xcodeproj/project.xcworkspace/
+ios/Runner.xcodeproj/xcuserdata/
+
+# macOS
+macos/Pods/
+macos/.symlinks/
+macos/Flutter/ephemeral/
+
+# Android
+android/.gradle/
+android/.idea/
+android/local.properties
+android/build/
+android/app/build/
+
+# VSCode & Xcode
+.vscode/
+*.xcuserstate
+*.xcworkspace
+*.xcodeproj/project.xcworkspace
+*.xcodeproj/xcuserdata/
+
+# Misc
+*.log
+*.tmp
+*.swp

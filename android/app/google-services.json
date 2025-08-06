@@ -1,0 +1,46 @@
+{
+  "project_info": {
+    "project_number": "1060824257263",
+    "project_id": "amalay-a8a15",
+    "storage_bucket": "amalay-a8a15.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1060824257263:android:69b4902c2dd82307cfc11a",
+        "android_client_info": {
+          "package_name": "com.example.amalay_user"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1060824257263-d82bnja2f2us3atclp68liipnio37s0e.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC4OBKzHorb2Plrv5gNpcsVvoj9sMQrs0g"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1060824257263-d82bnja2f2us3atclp68liipnio37s0e.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "1060824257263-7ku9f511regnmmk0kofbmg0jkbapnkec.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.amalayUser"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
