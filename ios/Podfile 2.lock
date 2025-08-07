@@ -1,0 +1,88 @@
+# -------------------------------
+# Flutter/Dart
+# -------------------------------
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+/build/
+**/build/
+**/ios/Flutter/.last_build_id
+**/doc/api/
+
+# -------------------------------
+# Generic
+# -------------------------------
+*.lock
+*.log
+*.tmp
+*.temp
+*.orig
+*.swp
+*.swo
+*.class
+*.pyc
+.DS_Store
+*.iml
+*.ipr
+*.iws
+.idea/
+.vscode/
+
+# -------------------------------
+# Android
+# -------------------------------
+android/.gradle/
+android/.idea/
+android/local.properties
+android/app/*.keystore
+android/app/build/
+android/build/
+.gradle/
+
+# -------------------------------
+# iOS - CocoaPods
+# -------------------------------
+ios/Pods/
+ios/Podfile.lock
+ios/.symlinks/
+ios/Flutter/App.framework
+ios/Flutter/Flutter.framework
+ios/Flutter/Flutter.podspec
+ios/Flutter/Generated.xcconfig
+ios/Flutter/ephemeral/
+ios/ServiceDefinitions.json
+
+# -------------------------------
+# iOS - Xcode
+# -------------------------------
+*.xcworkspace
+*.xcuserstate
+*.xcscmblueprint
+*.xcodeproj/project.xcworkspace/
+*.xcodeproj/xcuserdata/
+*.xcodeproj/project.xcsettings
+xcuserdata/
+DerivedData/
+*.pbxuser
+*.mode1v3
+*.mode2v3
+*.perspectivev3
+*.xccheckout
+*.moved-aside
+*.xcsettings
+
+# Archives, device support, and Xcode indexes
+~/Library/Developer/Xcode/DerivedData/
+~/Library/Developer/Xcode/Archives/
+~/Library/Developer/Xcode/iOS DeviceSupport/
+~/Library/Developer/Xcode/Products/
+~/Library/Developer/Xcode/Previews/
+
+# -------------------------------
+# Obfuscation / Symbolication
+# -------------------------------
+app.*.symbols
+app.*.map.json

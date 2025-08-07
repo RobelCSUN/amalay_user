@@ -1,9 +1,18 @@
+# -------------------------------
 # Miscellaneous
+# -------------------------------
 *.class
 *.log
 *.pyc
 *.swp
+*.swo
 .DS_Store
+.packages
+*.tmp
+*.temp
+*.orig
+
+# Directories to ignore
 .atom/
 .build/
 .buildlog/
@@ -12,34 +21,76 @@
 .swiftpm/
 migrate_working_dir/
 
-# IntelliJ related
+# -------------------------------
+# IDE related
+# -------------------------------
+
+# IntelliJ / Android Studio
 *.iml
 *.ipr
 *.iws
 .idea/
 
-# The .vscode folder contains launch configuration and tasks you configure in
-# VS Code which you may wish to be included in version control, so this line
-# is commented out by default.
-#.vscode/
+# VS Code (optional)
+.vscode/
 
-# Flutter/Dart/Pub related
-**/doc/api/
-**/ios/Flutter/.last_build_id
+# -------------------------------
+# Flutter / Dart / Pub
+# -------------------------------
 .dart_tool/
 .flutter-plugins
 .flutter-plugins-dependencies
+.packages
 .pub-cache/
 .pub/
 /build/
+**/build/
 
-# Symbolication related
+# Flutter API Docs
+**/doc/api/
+
+# iOS-specific Flutter
+**/ios/Flutter/.last_build_id
+
+# -------------------------------
+# iOS-specific
+# -------------------------------
+ios/.symlinks/
+ios/Flutter/App.framework
+ios/Flutter/Flutter.framework
+ios/Flutter/Flutter.podspec
+ios/Flutter/Generated.xcconfig
+ios/ServiceDefinitions.json
+Runner.xcworkspace/
+Pods/
+Pods 2/
+Podfile.lock
+
+# Xcode files
+xcuserdata/
+DerivedData/
+*.xcuserstate
+*.xcworkspace
+*.xcodeproj/project.xcworkspace/
+*.xcodeproj/xcuserdata/
+*.xcscmblueprint
+
+# -------------------------------
+# Android-specific
+# -------------------------------
+/android/.gradle/
+/android/.idea/
+/android/local.properties
+/android/app/*.keystore
+
+# Android build output
+/android/app/build/
+android/build/
+.gradle/
+build/
+
+# -------------------------------
+# Symbolication & Obfuscation
+# -------------------------------
 app.*.symbols
-
-# Obfuscation related
 app.*.map.json
-
-# Android Studio will place build artifacts here
-/android/app/debug
-/android/app/profile
-/android/app/release

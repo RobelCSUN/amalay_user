@@ -45,5 +45,25 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+
+	<!-- ✅ Add Google Sign-In URL Scheme -->
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<!-- 🔁 Replace this with your actual REVERSED_CLIENT_ID from GoogleService-Info.plist -->
+				<string>com.googleusercontent.apps.1060824257263-7ku9f511regnmmk0kofbmg0jkbapnkec</string>
+
+			</array>
+		</dict>
+	</array>
+
+	<!-- ✅ Add Apple Sign-In privacy message -->
+	<key>NSUserTrackingUsageDescription</key>
+	<string>This identifier will be used to sign in with Apple.</string>
+
 </dict>
 </plist>

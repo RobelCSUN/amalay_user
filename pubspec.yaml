@@ -14,11 +14,21 @@ dependencies:
     sdk: flutter
 
   cupertino_icons: ^1.0.8
-  firebase_core: ^2.24.2
+
+  # Firebase core & auth
+  firebase_core: ^3.15.2
+  firebase_auth: ^5.7.0
+
+  # Google Sign-In
+  google_sign_in: ^6.1.5
+
+  # Apple Sign-In
+  sign_in_with_apple: ^5.0.0
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
+
   flutter_lints: ^5.0.0
 
 flutter:
