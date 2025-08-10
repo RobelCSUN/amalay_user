@@ -1,12 +1,16 @@
+// lib/screens/home/home_screen.dart
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-// Add Apple Sign In support (iOS only)
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
-// For phone auth (later step)
-import 'package:flutter/services.dart';
+
+import '../../widgets/sign_in/google_sign_in_button.dart';
+import '../../widgets/sign_in/phone_sign_in_button.dart';
+import '../../widgets/sign_in/apple_sign_in_button.dart';
 
 class HomeScreen extends StatefulWidget {
+  const HomeScreen({super.key});
+
   @override
   State<HomeScreen> createState() => _HomeScreenState();
 }
@@ -15,35 +19,27 @@ class _HomeScreenState extends State<HomeScreen> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final GoogleSignIn _googleSignIn = GoogleSignIn();
 
-  User? user;
-
-  @override
-  void initState() {
-    super.initState();
-    user = _auth.currentUser;
-  }
-
-  Future<void> signInWithGoogle() async {
+  Future<void> _signInWithGoogle() async {
     try {
       final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
-      if (googleUser == null) return;
+      if (googleUser == null) return; // user canceled
 
-      final GoogleSignInAuthentication googleAuth =
-          await googleUser.authentication;
-
+      final googleAuth = await googleUser.authentication;
       final credential = GoogleAuthProvider.credential(
         accessToken: googleAuth.accessToken,
         idToken: googleAuth.idToken,
       );
 
-      final userCredential = await _auth.signInWithCredential(credential);
-      setState(() => user = userCredential.user);
+      await _auth.signInWithCredential(credential);
     } catch (e) {
-      print('Google Sign-In Error: $e');
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Google sign-in failed')),
+      );
     }
   }
 
-  Future<void> signInWithApple() async {
+  Future<void> _signInWithApple() async {
     try {
       final credential = await SignInWithApple.getAppleIDCredential(
         scopes: [
@@ -52,69 +48,114 @@ class _HomeScreenState extends State<HomeScreen> {
         ],
       );
 
-      final oauthCredential = OAuthProvider("apple.com").credential(
+      final oauth = OAuthProvider("apple.com").credential(
         idToken: credential.identityToken,
         accessToken: credential.authorizationCode,
       );
 
-      final userCredential = await _auth.signInWithCredential(oauthCredential);
-      setState(() => user = userCredential.user);
+      await _auth.signInWithCredential(oauth);
     } catch (e) {
-      print('Apple Sign-In Error: $e');
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Apple sign-in failed')),
+      );
     }
   }
 
-  Future<void> signOut() async {
-    await _auth.signOut();
-    await _googleSignIn.signOut();
-    setState(() => user = null);
+  Future<void> _signInWithPhone() async {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Phone sign-in coming next')),
+    );
+  }
+
+  Future<void> _signOut() async {
+    try {
+      await _auth.signOut();
+      await _googleSignIn.signOut();
+    } catch (_) {}
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(user != null ? 'Welcome' : 'Amalay - Login'),
-        actions: user != null
-            ? [IconButton(icon: Icon(Icons.logout), onPressed: signOut)]
-            : null,
+        title: const Text('Amalay - Login'),
+        actions: [
+          StreamBuilder<User?>(
+            stream: _auth.authStateChanges(),
+            builder: (context, snap) {
+              if (snap.data != null) {
+                return IconButton(
+                  icon: const Icon(Icons.logout),
+                  onPressed: _signOut,
+                );
+              }
+              return const SizedBox.shrink();
+            },
+          ),
+        ],
       ),
-      body: Center(
-        child: user != null
-            ? Column(
+      body: StreamBuilder<User?>(
+        stream: _auth.authStateChanges(),
+        builder: (context, snap) {
+          if (snap.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          final user = snap.data;
+
+          if (user != null) {
+            return Center(
+              child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text('Logged in as:', style: TextStyle(fontSize: 16)),
-                  SizedBox(height: 8),
+                  const Text('Logged in as:', style: TextStyle(fontSize: 16)),
+                  const SizedBox(height: 8),
                   Text(
-                    user?.displayName ?? user?.email ?? 'User',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                    user.displayName ?? user.email ?? 'User',
+                    style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                    textAlign: TextAlign.center,
                   ),
-                  SizedBox(height: 20),
-                  ElevatedButton(onPressed: signOut, child: Text("Sign Out")),
-                ],
-              )
-            : Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  ElevatedButton(
-                    onPressed: signInWithGoogle,
-                    child: Text("Sign in with Google"),
-                  ),
-                  SizedBox(height: 12),
-                  ElevatedButton(
-                    onPressed: () {
-                      // TODO: Add phone auth implementation next
-                    },
-                    child: Text("Sign in with Phone"),
-                  ),
-                  SizedBox(height: 12),
+                  const SizedBox(height: 20),
                   SizedBox(
-                    width: 250, // match your other buttons
-                    child: SignInWithAppleButton(onPressed: signInWithApple),
+                    width: 250,
+                    child: ElevatedButton(
+                      onPressed: _signOut,
+                      child: const Text('Sign Out'),
+                    ),
                   ),
                 ],
               ),
+            );
+          }
+
+          // Not signed in -> show 3 buttons immediately
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                GoogleSignInFullWidthButton(
+                  width: 250,
+                  height: 48,
+                  onPressed: _signInWithGoogle,
+                ),
+                const SizedBox(height: 12),
+                PhoneSignInFullWidthButton(
+                  width: 250,
+                  height: 48,
+                  onPressed: _signInWithPhone,
+                ),
+                const SizedBox(height: 12),
+                AppleSignInFullWidthButton(
+                  width: 250,
+                  height: 48,
+                  onPressed: _signInWithApple,
+                ),
+              ],
+            ),
+          );
+        },
       ),
     );
   }

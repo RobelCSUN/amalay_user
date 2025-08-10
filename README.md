@@ -42,12 +42,13 @@ pod install --repo-update
 
 
 
-How to run the app. (MVN clean type )
-
+# How to run the app. (MVN clean type )
+cd /Users/robelwoldegebriel/development/amalay/amalay_user
 flutter clean
 flutter pub get
-cd ios
+cd /Users/robelwoldegebriel/development/amalay/amalay_user/ios
+
 rm -rf Pods Podfile.lock
 pod install --repo-update
-cd ..
-flutter run
+cd /Users/robelwoldegebriel/development/amalay/amalay_user
+flutter run -d 00008110-001650311A44801E
