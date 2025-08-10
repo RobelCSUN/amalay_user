@@ -28,7 +28,8 @@ class _HomeScreenState extends State<HomeScreen> {
       final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
       if (googleUser == null) return;
 
-      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+      final GoogleSignInAuthentication googleAuth =
+          await googleUser.authentication;
 
       final credential = GoogleAuthProvider.credential(
         accessToken: googleAuth.accessToken,
@@ -75,12 +76,7 @@ class _HomeScreenState extends State<HomeScreen> {
       appBar: AppBar(
         title: Text(user != null ? 'Welcome' : 'Amalay - Login'),
         actions: user != null
-            ? [
-                IconButton(
-                  icon: Icon(Icons.logout),
-                  onPressed: signOut,
-                )
-              ]
+            ? [IconButton(icon: Icon(Icons.logout), onPressed: signOut)]
             : null,
       ),
       body: Center(
@@ -90,13 +86,12 @@ class _HomeScreenState extends State<HomeScreen> {
                 children: [
                   Text('Logged in as:', style: TextStyle(fontSize: 16)),
                   SizedBox(height: 8),
-                  Text(user?.displayName ?? user?.email ?? 'User',
-                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-                  SizedBox(height: 20),
-                  ElevatedButton(
-                    onPressed: signOut,
-                    child: Text("Sign Out"),
+                  Text(
+                    user?.displayName ?? user?.email ?? 'User',
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                   ),
+                  SizedBox(height: 20),
+                  ElevatedButton(onPressed: signOut, child: Text("Sign Out")),
                 ],
               )
             : Column(
@@ -114,8 +109,9 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: Text("Sign in with Phone"),
                   ),
                   SizedBox(height: 12),
-                  SignInWithAppleButton(
-                    onPressed: signInWithApple,
+                  SizedBox(
+                    width: 250, // match your other buttons
+                    child: SignInWithAppleButton(onPressed: signInWithApple),
                   ),
                 ],
               ),

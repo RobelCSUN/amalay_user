@@ -39,3 +39,15 @@ rm -rf ~/Library/Developer/Xcode/DerivedData
 # Reinstall Pods with updated repo
 pod install --repo-update
 
+
+
+
+How to run the app. (MVN clean type )
+
+flutter clean
+flutter pub get
+cd ios
+rm -rf Pods Podfile.lock
+pod install --repo-update
+cd ..
+flutter run
