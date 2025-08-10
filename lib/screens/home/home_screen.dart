@@ -7,6 +7,7 @@ import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import '../../widgets/sign_in/google_sign_in_button.dart';
 import '../../widgets/sign_in/phone_sign_in_button.dart';
 import '../../widgets/sign_in/apple_sign_in_button.dart';
+import '../auth/phone_auth_screen.dart'; // <- for phone flow screen
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -16,21 +17,19 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  final FirebaseAuth _auth = FirebaseAuth.instance;
-  final GoogleSignIn _googleSignIn = GoogleSignIn();
+  final _auth = FirebaseAuth.instance;
+  final _google = GoogleSignIn();
 
   Future<void> _signInWithGoogle() async {
     try {
-      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
-      if (googleUser == null) return; // user canceled
-
-      final googleAuth = await googleUser.authentication;
-      final credential = GoogleAuthProvider.credential(
-        accessToken: googleAuth.accessToken,
-        idToken: googleAuth.idToken,
+      final user = await _google.signIn();
+      if (user == null) return; // user canceled
+      final auth = await user.authentication;
+      final cred = GoogleAuthProvider.credential(
+        accessToken: auth.accessToken,
+        idToken: auth.idToken,
       );
-
-      await _auth.signInWithCredential(credential);
+      await _auth.signInWithCredential(cred);
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -41,19 +40,17 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _signInWithApple() async {
     try {
-      final credential = await SignInWithApple.getAppleIDCredential(
+      final c = await SignInWithApple.getAppleIDCredential(
         scopes: [
           AppleIDAuthorizationScopes.email,
           AppleIDAuthorizationScopes.fullName,
         ],
       );
-
-      final oauth = OAuthProvider("apple.com").credential(
-        idToken: credential.identityToken,
-        accessToken: credential.authorizationCode,
+      final cred = OAuthProvider("apple.com").credential(
+        idToken: c.identityToken,
+        accessToken: c.authorizationCode,
       );
-
-      await _auth.signInWithCredential(oauth);
+      await _auth.signInWithCredential(cred);
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -62,22 +59,24 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  Future<void> _signInWithPhone() async {
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Phone sign-in coming next')),
+  Future<void> _openPhoneAuth() async {
+    final ok = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(builder: (_) => const PhoneAuthScreen()),
     );
+    // If ok == true, Firebase authStateChanges() will emit and rebuild UI.
   }
 
   Future<void> _signOut() async {
     try {
       await _auth.signOut();
-      await _googleSignIn.signOut();
+      await _google.signOut();
     } catch (_) {}
   }
 
   @override
   Widget build(BuildContext context) {
+    // Show buttons immediately; StreamBuilder will switch to signed-in UI if needed.
     return Scaffold(
       appBar: AppBar(
         title: const Text('Amalay - Login'),
@@ -85,10 +84,12 @@ class _HomeScreenState extends State<HomeScreen> {
           StreamBuilder<User?>(
             stream: _auth.authStateChanges(),
             builder: (context, snap) {
-              if (snap.data != null) {
+              final user = snap.data;
+              if (user != null) {
                 return IconButton(
                   icon: const Icon(Icons.logout),
                   onPressed: _signOut,
+                  tooltip: 'Sign out',
                 );
               }
               return const SizedBox.shrink();
@@ -99,13 +100,10 @@ class _HomeScreenState extends State<HomeScreen> {
       body: StreamBuilder<User?>(
         stream: _auth.authStateChanges(),
         builder: (context, snap) {
-          if (snap.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-
           final user = snap.data;
 
           if (user != null) {
+            // Signed-in UI
             return Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -130,7 +128,7 @@ class _HomeScreenState extends State<HomeScreen> {
             );
           }
 
-          // Not signed in -> show 3 buttons immediately
+          // Not signed in (or still restoring) -> show buttons immediately
           return Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -144,7 +142,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 PhoneSignInFullWidthButton(
                   width: 250,
                   height: 48,
-                  onPressed: _signInWithPhone,
+                  onPressed: _openPhoneAuth,
                 ),
                 const SizedBox(height: 12),
                 AppleSignInFullWidthButton(

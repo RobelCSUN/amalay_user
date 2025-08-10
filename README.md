@@ -51,4 +51,9 @@ cd /Users/robelwoldegebriel/development/amalay/amalay_user/ios
 rm -rf Pods Podfile.lock
 pod install --repo-update
 cd /Users/robelwoldegebriel/development/amalay/amalay_user
-flutter run -d 00008110-001650311A44801E
+# flutter run -d 00008110-001650311A44801E
+flutter run --verbose
+
+
+Delete ruuner:
+flutter create .
