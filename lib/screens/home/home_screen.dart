@@ -1,12 +1,12 @@
+// lib/screens/home/home_screen.dart
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:google_sign_in/google_sign_in.dart';
-import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 
-import '../../widgets/sign_in/google_sign_in_button.dart';
-import '../../widgets/sign_in/phone_sign_in_button.dart';
-import '../../widgets/sign_in/apple_sign_in_button.dart';
-import '../auth/phone_auth_screen.dart';
+import '../../services/auth_service.dart';
+import '../../services/phone_auth_screen.dart';
+
+import '../../widgets/signed_in_card.dart';
+import '../../widgets/auth_card.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -16,48 +16,21 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  bool _isSignUp = false; // toggles copy only; does NOT change auth logic
+  bool _isSignUp = false; // copy-only toggle (does not change auth logic)
+  late final AuthService _authService;
 
-  final _auth = FirebaseAuth.instance;
-  final _google = GoogleSignIn();
-
-  Future<void> _signInWithGoogle() async {
-    try {
-      final user = await _google.signIn();
-      if (user == null) return; // user canceled
-      final auth = await user.authentication;
-      final cred = GoogleAuthProvider.credential(
-        accessToken: auth.accessToken,
-        idToken: auth.idToken,
-      );
-      await _auth.signInWithCredential(cred);
-    } catch (_) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Google sign-in failed')),
-      );
-    }
+  @override
+  void initState() {
+    super.initState();
+    _authService = AuthService();
   }
 
-  Future<void> _signInWithApple() async {
-    try {
-      final c = await SignInWithApple.getAppleIDCredential(
-        scopes: [
-          AppleIDAuthorizationScopes.email,
-          AppleIDAuthorizationScopes.fullName,
-        ],
-      );
-      final cred = OAuthProvider("apple.com").credential(
-        idToken: c.identityToken,
-        accessToken: c.authorizationCode,
-      );
-      await _auth.signInWithCredential(cred);
-    } catch (_) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Apple sign-in failed')),
-      );
-    }
+  Future<void> _handleGoogle() async {
+    await _authService.signInWithGoogle();
+  }
+
+  Future<void> _handleApple() async {
+    await _authService.signInWithApple();
   }
 
   Future<void> _openPhoneAuth() async {
@@ -68,15 +41,13 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _signOut() async {
-    try {
-      await _auth.signOut();
-      await _google.signOut();
-    } catch (_) {}
+    await _authService.signOut();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      // Background only; title + content live inside cards
       body: Container(
         width: double.infinity,
         height: double.infinity,
@@ -89,152 +60,31 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
         child: SafeArea(
           child: StreamBuilder<User?>(
-            stream: _auth.authStateChanges(),
+            stream: _authService.authStateChanges,
             builder: (context, snap) {
               final user = snap.data;
 
               if (user != null) {
-                // Signed-in UI
                 return Center(
-                  child: Container(
-                    constraints: const BoxConstraints(maxWidth: 420),
-                    margin: const EdgeInsets.symmetric(horizontal: 24),
-                    padding: const EdgeInsets.all(24),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.95),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Text(
-                          'Amalay',
-                          style: TextStyle(
-                            fontSize: 32,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black87,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        const Text(
-                          'Just a swipe away from turning quiet weekends into unforgettable moments together.',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: Colors.black87,
-                            height: 1.35,
-                          ),
-                        ),
-                        const SizedBox(height: 20),
-                        Text(
-                          user.displayName ?? user.email ?? 'User',
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        SizedBox(
-                          width: 280,
-                          height: 48,
-                          child: ElevatedButton(
-                            onPressed: _signOut,
-                            child: const Text('Sign Out'),
-                          ),
-                        ),
-                      ],
-                    ),
+                  child: SignedInCard(
+                    user: user,
+                    onSignOut: _signOut,
                   ),
                 );
               }
 
-              // Not signed in — show the card with buttons
+              // Not signed in — show auth card at ~40% down the screen
               return Column(
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: [
                   SizedBox(height: MediaQuery.of(context).size.height * 0.40),
-
                   Center(
-                    child: Container(
-                      constraints: const BoxConstraints(maxWidth: 420),
-                      margin: const EdgeInsets.symmetric(horizontal: 24),
-                      padding: const EdgeInsets.all(24),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.95),
-                        borderRadius: BorderRadius.circular(20),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.08),
-                            blurRadius: 20,
-                            offset: const Offset(0, 10),
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            _isSignUp ? 'Create your Amalay account' : 'Amalay',
-                            style: const TextStyle(
-                              fontSize: 32,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.black87,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            _isSignUp
-                                ? 'Sign up to start turning quiet weekends into unforgettable moments.'
-                                : 'Just a swipe away from turning quiet weekends into unforgettable moments together.',
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(
-                              fontSize: 14,
-                              color: Colors.black87,
-                              height: 1.35,
-                            ),
-                          ),
-                          const SizedBox(height: 24),
-
-                          // Buttons
-                          GoogleSignInFullWidthButton(
-                            width: double.infinity,
-                            height: 48,
-                            onPressed: _signInWithGoogle,
-                          ),
-                          const SizedBox(height: 12),
-                          PhoneSignInFullWidthButton(
-                            width: double.infinity,
-                            height: 48,
-                            onPressed: _openPhoneAuth,
-                          ),
-                          const SizedBox(height: 12),
-                          AppleSignInFullWidthButton(
-                            width: double.infinity,
-                            height: 48,
-                            onPressed: _signInWithApple,
-                          ),
-
-                          const SizedBox(height: 20),
-                          GestureDetector(
-                            onTap: () {
-                              setState(() {
-                                _isSignUp = !_isSignUp;
-                              });
-                            },
-                            child: Text(
-                              _isSignUp
-                                  ? 'Already have an account? Sign in'
-                                  : 'Don\'t have an account? Sign up',
-                              style: const TextStyle(
-                                fontSize: 14,
-                                color: Colors.blue,
-                                decoration: TextDecoration.underline,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
+                    child: AuthCard(
+                      isSignUp: _isSignUp,
+                      onToggleCopy: () => setState(() => _isSignUp = !_isSignUp),
+                      onGoogle: _handleGoogle,
+                      onPhone: _openPhoneAuth,
+                      onApple: _handleApple,
                     ),
                   ),
                 ],
