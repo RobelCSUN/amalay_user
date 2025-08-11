@@ -7,7 +7,7 @@ import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import '../../widgets/sign_in/google_sign_in_button.dart';
 import '../../widgets/sign_in/phone_sign_in_button.dart';
 import '../../widgets/sign_in/apple_sign_in_button.dart';
-import '../auth/phone_auth_screen.dart'; // <- for phone flow screen
+import '../auth/phone_auth_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -30,7 +30,7 @@ class _HomeScreenState extends State<HomeScreen> {
         idToken: auth.idToken,
       );
       await _auth.signInWithCredential(cred);
-    } catch (e) {
+    } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Google sign-in failed')),
@@ -51,7 +51,7 @@ class _HomeScreenState extends State<HomeScreen> {
         accessToken: c.authorizationCode,
       );
       await _auth.signInWithCredential(cred);
-    } catch (e) {
+    } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Apple sign-in failed')),
@@ -60,11 +60,10 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _openPhoneAuth() async {
-    final ok = await Navigator.push<bool>(
+    await Navigator.push<bool>(
       context,
       MaterialPageRoute(builder: (_) => const PhoneAuthScreen()),
     );
-    // If ok == true, Firebase authStateChanges() will emit and rebuild UI.
   }
 
   Future<void> _signOut() async {
@@ -76,84 +75,154 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Show buttons immediately; StreamBuilder will switch to signed-in UI if needed.
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Amalay - Login'),
-        actions: [
-          StreamBuilder<User?>(
+      // No AppBar — title lives inside the card
+      body: Container(
+        width: double.infinity,
+        height: double.infinity,
+        decoration: const BoxDecoration(
+          // Warm orange gradient background
+          gradient: LinearGradient(
+            colors: [Color(0xFFFFA726), Color(0xFFFF7043)],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
+        ),
+        child: SafeArea(
+          child: StreamBuilder<User?>(
             stream: _auth.authStateChanges(),
             builder: (context, snap) {
               final user = snap.data;
+
               if (user != null) {
-                return IconButton(
-                  icon: const Icon(Icons.logout),
-                  onPressed: _signOut,
-                  tooltip: 'Sign out',
+                // Signed-in UI
+                return Center(
+                  child: Container(
+                    // ---- SIZE TWEAK: adjust maxWidth or padding to change card size
+                    constraints: const BoxConstraints(maxWidth: 420),
+                    margin: const EdgeInsets.symmetric(horizontal: 24),
+                    padding: const EdgeInsets.all(24),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.95),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Text(
+                          'Amalay',
+                          style: TextStyle(
+                            fontSize: 32,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black87,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        const Text(
+                          'Just a swipe away from turning quiet weekends into unforgettable moments together.',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.black87,
+                            height: 1.35,
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                        Text(
+                          user.displayName ?? user.email ?? 'User',
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        SizedBox(
+                          width: 280,
+                          height: 48,
+                          child: ElevatedButton(
+                            onPressed: _signOut,
+                            child: const Text('Sign Out'),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 );
               }
-              return const SizedBox.shrink();
-            },
-          ),
-        ],
-      ),
-      body: StreamBuilder<User?>(
-        stream: _auth.authStateChanges(),
-        builder: (context, snap) {
-          final user = snap.data;
 
-          if (user != null) {
-            // Signed-in UI
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
+              // Not signed in — show the card with buttons
+              return Column(
+                mainAxisAlignment: MainAxisAlignment.start,
                 children: [
-                  const Text('Logged in as:', style: TextStyle(fontSize: 16)),
-                  const SizedBox(height: 8),
-                  Text(
-                    user.displayName ?? user.email ?? 'User',
-                    style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 20),
-                  SizedBox(
-                    width: 250,
-                    child: ElevatedButton(
-                      onPressed: _signOut,
-                      child: const Text('Sign Out'),
+                  SizedBox(height: MediaQuery.of(context).size.height * 0.40),
+
+                  Center(
+                    child: Container(
+                      constraints: const BoxConstraints(maxWidth: 420),
+                      margin: const EdgeInsets.symmetric(horizontal: 24),
+                      padding: const EdgeInsets.all(24),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.95),
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.08),
+                            blurRadius: 20,
+                            offset: const Offset(0, 10),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Text(
+                            'Amalay',
+                            style: TextStyle(
+                              fontSize: 32,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black87,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          const Text(
+                            'Just a swipe away from turning quiet weekends into unforgettable moments together.',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.black87,
+                              height: 1.35,
+                            ),
+                          ),
+                          const SizedBox(height: 24),
+
+                          // Buttons (logic unchanged)
+                          GoogleSignInFullWidthButton(
+                            width: double.infinity,
+                            height: 48,
+                            onPressed: _signInWithGoogle,
+                          ),
+                          const SizedBox(height: 12),
+                          PhoneSignInFullWidthButton(
+                            width: double.infinity,
+                            height: 48,
+                            onPressed: _openPhoneAuth,
+                          ),
+                          const SizedBox(height: 12),
+                          AppleSignInFullWidthButton(
+                            width: double.infinity,
+                            height: 48,
+                            onPressed: _signInWithApple,
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ],
-              ),
-            );
-          }
-
-          // Not signed in (or still restoring) -> show buttons immediately
-          return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                GoogleSignInFullWidthButton(
-                  width: 250,
-                  height: 48,
-                  onPressed: _signInWithGoogle,
-                ),
-                const SizedBox(height: 12),
-                PhoneSignInFullWidthButton(
-                  width: 250,
-                  height: 48,
-                  onPressed: _openPhoneAuth,
-                ),
-                const SizedBox(height: 12),
-                AppleSignInFullWidthButton(
-                  width: 250,
-                  height: 48,
-                  onPressed: _signInWithApple,
-                ),
-              ],
-            ),
-          );
-        },
+              );
+            },
+          ),
+        ),
       ),
     );
   }
