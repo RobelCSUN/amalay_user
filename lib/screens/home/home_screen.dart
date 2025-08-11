@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 import '../../services/auth_service.dart';
+import '../../services/user_repository.dart';
 import '../../services/phone_auth_screen.dart';
 
 import '../../widgets/signed_in_card.dart';
@@ -16,7 +17,7 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  bool _isSignUp = false; // copy-only toggle (does not change auth logic)
+  bool _isSignUp = false; // copy-only toggle
   late final AuthService _authService;
 
   @override
@@ -26,14 +27,90 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _handleGoogle() async {
-    await _authService.signInWithGoogle();
+    // clear any stale snackbars
+    if (mounted) ScaffoldMessenger.of(context).clearSnackBars();
+
+    // ---- STEP 1: Google Auth ONLY
+    try {
+      debugPrint('[Auth] Google sign-in: start');
+      await _authService.signInWithGoogle();
+      debugPrint('[Auth] Google sign-in: success');
+    } on FirebaseAuthException catch (e) {
+      if (e.code == 'canceled') {
+        debugPrint('[Auth] Google sign-in: user canceled');
+        return;
+      }
+      debugPrint('[Auth] Google sign-in ERROR: ${e.code} ${e.message}');
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Google sign-in failed')),
+      );
+      return; // stop here; don’t run Firestore step
+    } catch (e) {
+      debugPrint('[Auth] Google sign-in ERROR: $e');
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Google sign-in failed')),
+      );
+      return;
+    }
+
+    // ---- STEP 2: Firestore (best-effort; never show "Google failed")
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) {
+        debugPrint('[Auth] Google sign-in succeeded but currentUser==null');
+        return;
+      }
+      debugPrint('[Repo] ensureUserDoc + touchLogin for ${user.uid}');
+      final repo = UserRepository();
+      await repo.ensureUserDoc(user);
+      await repo.touchLogin(user.uid);
+      debugPrint('[Repo] user doc ok');
+    } catch (e) {
+      // Don’t confuse user: log only
+      debugPrint('[Repo] ensure/touch failed (ignored): $e');
+    }
   }
 
   Future<void> _handleApple() async {
-    await _authService.signInWithApple();
+    if (mounted) ScaffoldMessenger.of(context).clearSnackBars();
+
+    try {
+      debugPrint('[Auth] Apple sign-in: start');
+      await _authService.signInWithApple();
+      debugPrint('[Auth] Apple sign-in: success');
+    } on FirebaseAuthException catch (e) {
+      if (e.code == 'canceled') return;
+      debugPrint('[Auth] Apple sign-in ERROR: ${e.code} ${e.message}');
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Apple sign-in failed')),
+      );
+      return;
+    } catch (e) {
+      debugPrint('[Auth] Apple sign-in ERROR: $e');
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Apple sign-in failed')),
+      );
+      return;
+    }
+
+    // best-effort Firestore
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) return;
+      final repo = UserRepository();
+      await repo.ensureUserDoc(user);
+      await repo.touchLogin(user.uid);
+    } catch (e) {
+      debugPrint('[Repo] ensure/touch failed (ignored): $e');
+    }
   }
 
   Future<void> _openPhoneAuth() async {
+    if (mounted) ScaffoldMessenger.of(context).clearSnackBars();
     await Navigator.push<bool>(
       context,
       MaterialPageRoute(builder: (_) => const PhoneAuthScreen()),
@@ -41,13 +118,22 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _signOut() async {
-    await _authService.signOut();
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).clearSnackBars();
+    try {
+      debugPrint('[Auth] signOut: start');
+      await _authService.signOut();
+      debugPrint('[Auth] signOut: done');
+    } finally {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).clearSnackBars();
+      setState(() {});
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // Background only; title + content live inside cards
       body: Container(
         width: double.infinity,
         height: double.infinity,
@@ -65,6 +151,11 @@ class _HomeScreenState extends State<HomeScreen> {
               final user = snap.data;
 
               if (user != null) {
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).clearSnackBars();
+                  }
+                });
                 return Center(
                   child: SignedInCard(
                     user: user,
@@ -73,7 +164,12 @@ class _HomeScreenState extends State<HomeScreen> {
                 );
               }
 
-              // Not signed in — show auth card at ~40% down the screen
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if (mounted) {
+                  ScaffoldMessenger.of(context).clearSnackBars();
+                }
+              });
+
               return Column(
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: [

@@ -1,4 +1,3 @@
-// lib/screens/home/widgets/signed_in_card.dart
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
@@ -14,6 +13,11 @@ class SignedInCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final displayName = (user.displayName ?? '').trim();
+    final email = (user.email ?? '').trim();
+    final hasName = displayName.isNotEmpty;
+    final hasEmail = email.isNotEmpty;
+
     return Container(
       constraints: const BoxConstraints(maxWidth: 420),
       margin: const EdgeInsets.symmetric(horizontal: 24),
@@ -44,14 +48,51 @@ class SignedInCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 20),
-          Text(
-            user.displayName ?? user.email ?? 'User',
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
+
+          // Optional avatar if available
+          if (user.photoURL != null) ...[
+            CircleAvatar(
+              radius: 28,
+              backgroundImage: NetworkImage(user.photoURL!),
             ),
-          ),
+            const SizedBox(height: 12),
+          ],
+
+          // Name (if present)
+          if (hasName)
+            Text(
+              displayName,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+
+          // Email (if present)
+          if (hasEmail) ...[
+            if (hasName) const SizedBox(height: 4),
+            Text(
+              email,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontSize: 14,
+                color: Colors.black54,
+              ),
+            ),
+          ],
+
+          // If neither name nor email, show a generic label
+          if (!hasName && !hasEmail)
+            const Text(
+              'User',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+
           const SizedBox(height: 16),
           SizedBox(
             width: 280,
