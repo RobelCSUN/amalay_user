@@ -1,4 +1,3 @@
-// lib/screens/home/home_screen.dart
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -17,6 +16,8 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  bool _isSignUp = false; // toggles copy only; does NOT change auth logic
+
   final _auth = FirebaseAuth.instance;
   final _google = GoogleSignIn();
 
@@ -76,12 +77,10 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // No AppBar — title lives inside the card
       body: Container(
         width: double.infinity,
         height: double.infinity,
         decoration: const BoxDecoration(
-          // Warm orange gradient background
           gradient: LinearGradient(
             colors: [Color(0xFFFFA726), Color(0xFFFF7043)],
             begin: Alignment.topCenter,
@@ -98,7 +97,6 @@ class _HomeScreenState extends State<HomeScreen> {
                 // Signed-in UI
                 return Center(
                   child: Container(
-                    // ---- SIZE TWEAK: adjust maxWidth or padding to change card size
                     constraints: const BoxConstraints(maxWidth: 420),
                     margin: const EdgeInsets.symmetric(horizontal: 24),
                     padding: const EdgeInsets.all(24),
@@ -176,19 +174,21 @@ class _HomeScreenState extends State<HomeScreen> {
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Text(
-                            'Amalay',
-                            style: TextStyle(
+                          Text(
+                            _isSignUp ? 'Create your Amalay account' : 'Amalay',
+                            style: const TextStyle(
                               fontSize: 32,
                               fontWeight: FontWeight.bold,
                               color: Colors.black87,
                             ),
                           ),
                           const SizedBox(height: 8),
-                          const Text(
-                            'Just a swipe away from turning quiet weekends into unforgettable moments together.',
+                          Text(
+                            _isSignUp
+                                ? 'Sign up to start turning quiet weekends into unforgettable moments.'
+                                : 'Just a swipe away from turning quiet weekends into unforgettable moments together.',
                             textAlign: TextAlign.center,
-                            style: TextStyle(
+                            style: const TextStyle(
                               fontSize: 14,
                               color: Colors.black87,
                               height: 1.35,
@@ -196,7 +196,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                           const SizedBox(height: 24),
 
-                          // Buttons (logic unchanged)
+                          // Buttons
                           GoogleSignInFullWidthButton(
                             width: double.infinity,
                             height: 48,
@@ -213,6 +213,25 @@ class _HomeScreenState extends State<HomeScreen> {
                             width: double.infinity,
                             height: 48,
                             onPressed: _signInWithApple,
+                          ),
+
+                          const SizedBox(height: 20),
+                          GestureDetector(
+                            onTap: () {
+                              setState(() {
+                                _isSignUp = !_isSignUp;
+                              });
+                            },
+                            child: Text(
+                              _isSignUp
+                                  ? 'Already have an account? Sign in'
+                                  : 'Don\'t have an account? Sign up',
+                              style: const TextStyle(
+                                fontSize: 14,
+                                color: Colors.blue,
+                                decoration: TextDecoration.underline,
+                              ),
+                            ),
                           ),
                         ],
                       ),

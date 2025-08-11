@@ -32,7 +32,7 @@ class PhoneSignInFullWidthButton extends StatelessWidget {
           children: [
             Icon(Icons.phone, size: 18),
             SizedBox(width: 10),
-            Text('Sign in with Phone'),
+            Text('Continue with Phone'), // <-- label change only
           ],
         ),
       ),

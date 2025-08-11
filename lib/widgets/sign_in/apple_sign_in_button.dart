@@ -18,11 +18,11 @@ class AppleSignInFullWidthButton extends StatelessWidget {
     return SizedBox(
       width: width,
       height: height,
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(30), // pill to match others
-        child: SignInWithAppleButton(
-          onPressed: onPressed,
-        ),
+      child: SignInWithAppleButton(
+        onPressed: onPressed,
+        style: SignInWithAppleButtonStyle.black, // Can also be white or whiteOutline
+        borderRadius: const BorderRadius.all(Radius.circular(30)),
+        text: 'Continue with Apple', // ✅ Official allowed text option
       ),
     );
   }
