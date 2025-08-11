@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 import 'app/app.dart';
-import 'services/auth_warmup.dart'; // make sure you create this file
+import 'services/auth/auth_warmup.dart'; // make sure you create this file
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();

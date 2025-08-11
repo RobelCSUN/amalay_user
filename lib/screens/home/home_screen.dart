@@ -2,9 +2,9 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
-import '../../services/auth_service.dart';
-import '../../services/user_repository.dart';
-import '../../services/phone_auth_screen.dart';
+import '../../services/auth/auth_service.dart';
+import '../../repositories/user_repository.dart';
+import '../../services/auth/phone_auth_screen.dart';
 
 import '../../widgets/signed_in_card.dart';
 import '../../widgets/auth_card.dart';
