@@ -3,7 +3,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 
 import 'package:amalay_user/repositories/user_repository.dart';
 import 'package:amalay_user/services/auth/auth_service.dart';
-import 'package:amalay_user/screens/home/home_screen.dart'; // go back to home after save
 
 class CreateProfileScreen extends StatefulWidget {
   const CreateProfileScreen({super.key});
@@ -40,20 +39,19 @@ class _CreateProfileScreenState extends State<CreateProfileScreen> {
 
     setState(() => _saving = true);
     try {
-      // Update Firebase Auth display name
+      // Update display name
       await user.updateDisplayName(name);
-      await FirebaseAuth.instance.currentUser?.reload();
+
+      // CHANGED: removed user.reload(); it causes an extra auth event/rebuild
+      // await FirebaseAuth.instance.currentUser?.reload(); // removed
 
       // Mark profile complete in Firestore
       await _repo.markProfileComplete(user.uid, displayName: name);
 
       if (!mounted) return;
 
-      // Instead of pop(), go to HomeScreen which will show SignedInCard
-      Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (_) => const HomeScreen()),
-        (route) => false,
-      );
+      // CHANGED: pop with a "true" result so HomeScreen can skip the extra check
+      Navigator.of(context).pop(true); // CHANGED
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(
@@ -72,14 +70,15 @@ class _CreateProfileScreenState extends State<CreateProfileScreen> {
       await _authService.signOut();
 
       if (!mounted) return;
+      // Quick feedback
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text('Signed out')));
 
-      Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (_) => const HomeScreen()),
-        (route) => false,
-      );
+      // Go back to previous screen (Home will show login)
+      Navigator.of(
+        context,
+      ).pop(false); // CHANGED: return false so caller knows we didn't complete
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(

@@ -5,10 +5,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:amalay_user/services/auth/auth_service.dart';
 import 'package:amalay_user/repositories/user_repository.dart';
 import 'package:amalay_user/services/auth/phone_auth_screen.dart';
-
 import 'package:amalay_user/widgets/signed_in_card.dart';
 import 'package:amalay_user/widgets/auth_card.dart';
-import 'package:amalay_user/onboarding/create_profile_screen.dart'; // ← NEW
+import 'package:amalay_user/onboarding/create_profile_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -20,7 +19,9 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   bool _isSignUp = false; // copy-only toggle
   late final AuthService _authService;
-  bool _pushedProfileFlow = false; // avoid double navigation
+  bool _pushedProfileFlow = false; // avoid double navigation into profile
+  bool _profileCompleteOverride =
+      false; // NEW: short-circuit after profile save
 
   @override
   void initState() {
@@ -119,7 +120,8 @@ class _HomeScreenState extends State<HomeScreen> {
     } finally {
       if (!mounted) return;
       ScaffoldMessenger.of(context).clearSnackBars();
-      _pushedProfileFlow = false; // reset navigation guard
+      _pushedProfileFlow = false; // reset guards
+      _profileCompleteOverride = false; // reset override
       setState(() {});
     }
   }
@@ -146,9 +148,7 @@ class _HomeScreenState extends State<HomeScreen> {
               // Signed out -> show auth buttons
               if (user == null) {
                 WidgetsBinding.instance.addPostFrameCallback((_) {
-                  if (mounted) {
-                    ScaffoldMessenger.of(context).clearSnackBars();
-                  }
+                  if (mounted) ScaffoldMessenger.of(context).clearSnackBars();
                 });
 
                 return Column(
@@ -175,38 +175,63 @@ class _HomeScreenState extends State<HomeScreen> {
                 );
               }
 
-              // Signed in -> decide where to go based on profile completeness
+              // 🔥 Short-circuit immediately if we *just* finished profile flow.
+              // This avoids a one-frame FutureBuilder flicker.
+              if (_profileCompleteOverride) {
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  if (mounted) ScaffoldMessenger.of(context).clearSnackBars();
+                });
+                return Center(
+                  child: SignedInCard(user: user, onSignOut: _signOut),
+                );
+              }
+
+              // Signed in -> decide based on Firestore profile completeness
               return FutureBuilder<bool>(
                 future: UserRepository().isProfileComplete(user.uid),
                 builder: (context, snap2) {
                   if (snap2.connectionState == ConnectionState.waiting) {
-                    // Tiny loader while checking Firestore
                     return const Center(child: CircularProgressIndicator());
                   }
 
                   final complete = snap2.data == true;
 
-                  if (!complete && !_pushedProfileFlow) {
-                    // Navigate once to create profile
-                    _pushedProfileFlow = true;
+                  if (complete) {
                     WidgetsBinding.instance.addPostFrameCallback((_) {
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).clearSnackBars();
+                      }
+                    });
+                    return Center(
+                      child: SignedInCard(user: user, onSignOut: _signOut),
+                    );
+                  }
+
+                  // Not complete → push profile flow once, then set override on success
+                  if (!_pushedProfileFlow) {
+                    _pushedProfileFlow = true;
+                    WidgetsBinding.instance.addPostFrameCallback((_) async {
                       if (!mounted) return;
-                      Navigator.of(context).pushReplacement(
+                      final result = await Navigator.of(context).push<bool>(
                         MaterialPageRoute(
                           builder: (_) => const CreateProfileScreen(),
                         ),
                       );
+                      if (!mounted) return;
+
+                      if (result == true) {
+                        // We just completed profile → show card next build immediately.
+                        setState(() {
+                          _profileCompleteOverride = true;
+                        });
+                      } else {
+                        // User backed out; allow trying again.
+                        _pushedProfileFlow = false;
+                      }
                     });
-                    return const SizedBox.shrink();
                   }
 
-                  // Profile complete -> show your signed-in card
-                  WidgetsBinding.instance.addPostFrameCallback((_) {
-                    if (mounted) ScaffoldMessenger.of(context).clearSnackBars();
-                  });
-                  return Center(
-                    child: SignedInCard(user: user, onSignOut: _signOut),
-                  );
+                  return const SizedBox.shrink();
                 },
               );
             },

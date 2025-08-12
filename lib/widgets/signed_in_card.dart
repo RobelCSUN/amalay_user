@@ -5,11 +5,7 @@ class SignedInCard extends StatelessWidget {
   final User user;
   final VoidCallback onSignOut;
 
-  const SignedInCard({
-    super.key,
-    required this.user,
-    required this.onSignOut,
-  });
+  const SignedInCard({super.key, required this.user, required this.onSignOut});
 
   @override
   Widget build(BuildContext context) {
@@ -41,11 +37,7 @@ class SignedInCard extends StatelessWidget {
           const Text(
             'Just a swipe away from turning quiet weekends into unforgettable moments together.',
             textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.black87,
-              height: 1.35,
-            ),
+            style: TextStyle(fontSize: 14, color: Colors.black87, height: 1.35),
           ),
           const SizedBox(height: 20),
 
@@ -63,10 +55,7 @@ class SignedInCard extends StatelessWidget {
             Text(
               displayName,
               textAlign: TextAlign.center,
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-              ),
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
             ),
 
           // Email (if present)
@@ -75,10 +64,7 @@ class SignedInCard extends StatelessWidget {
             Text(
               email,
               textAlign: TextAlign.center,
-              style: const TextStyle(
-                fontSize: 14,
-                color: Colors.black54,
-              ),
+              style: const TextStyle(fontSize: 14, color: Colors.black54),
             ),
           ],
 
@@ -87,10 +73,7 @@ class SignedInCard extends StatelessWidget {
             const Text(
               'User',
               textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-              ),
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
             ),
 
           const SizedBox(height: 16),

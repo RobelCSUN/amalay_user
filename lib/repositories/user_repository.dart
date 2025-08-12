@@ -3,51 +3,52 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 class UserRepository {
-  final _db = FirebaseFirestore.instance;
+  // 🔹 Single source of truth for users collection
+  static const String usersCollection = 'users';
 
-  CollectionReference<Map<String, dynamic>> get _users =>
-      _db.collection('users');
+  final _firestore = FirebaseFirestore.instance;
 
-  /// Create baseline user doc if missing.
+  /// Ensures that the user's document exists in Firestore.
   Future<void> ensureUserDoc(User user) async {
-    final ref = _users.doc(user.uid);
-    final snap = await ref.get();
-    if (!snap.exists) {
-      await ref.set({
+    final docRef = _firestore.collection(usersCollection).doc(user.uid);
+    final doc = await docRef.get();
+
+    if (!doc.exists) {
+      await docRef.set({
+        'uid': user.uid,
         'displayName': user.displayName,
         'email': user.email,
-        'photoURL': user.photoURL,
         'createdAt': FieldValue.serverTimestamp(),
-        'lastLoginAt': FieldValue.serverTimestamp(),
         'profileComplete': false,
-      }, SetOptions(merge: true));
-    } else {
-      // keep it lightweight, don’t overwrite user’s edits
-      await ref.set({
-        'email': user.email,
-        'photoURL': user.photoURL,
-        'lastLoginAt': FieldValue.serverTimestamp(),
-      }, SetOptions(merge: true));
+      });
     }
   }
 
+  /// Marks the user profile as complete with optional display name.
+  Future<void> markProfileComplete(String uid, {String? displayName}) async {
+    final updateData = {
+      'profileComplete': true,
+      'updatedAt': FieldValue.serverTimestamp(),
+    };
+    if (displayName != null && displayName.trim().isNotEmpty) {
+      updateData['displayName'] = displayName.trim();
+    }
+
+    await _firestore.collection(usersCollection).doc(uid).update(updateData);
+  }
+
+  /// Checks if the user's profile is complete.
+  Future<bool> isProfileComplete(String uid) async {
+    final doc = await _firestore.collection(usersCollection).doc(uid).get();
+    if (!doc.exists) return false;
+    final data = doc.data();
+    return data?['profileComplete'] == true;
+  }
+
+  /// Updates the last login timestamp.
   Future<void> touchLogin(String uid) async {
-    await _users.doc(uid).update({
+    await _firestore.collection(usersCollection).doc(uid).update({
       'lastLoginAt': FieldValue.serverTimestamp(),
     });
-  }
-
-  Future<bool> isProfileComplete(String uid) async {
-    final snap = await _users.doc(uid).get();
-    if (!snap.exists) return false;
-    return (snap.data()?['profileComplete'] as bool?) ?? false;
-  }
-
-  Future<void> markProfileComplete(String uid,
-      {required String displayName}) async {
-    await _users.doc(uid).set({
-      'displayName': displayName,
-      'profileComplete': true,
-    }, SetOptions(merge: true));
   }
 }

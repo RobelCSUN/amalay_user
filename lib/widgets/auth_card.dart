@@ -1,8 +1,9 @@
 // lib/screens/home/widgets/auth_card.dart
 import 'package:flutter/material.dart';
+
 import 'package:amalay_user/widgets/sign_in/google_sign_in_button.dart';
-import 'package:amalay_user/widgets/sign_in/phone_sign_in_button.dart';
 import 'package:amalay_user/widgets/sign_in/apple_sign_in_button.dart';
+import 'package:amalay_user/widgets/sign_in/phone_sign_in_button.dart';
 
 class AuthCard extends StatelessWidget {
   final bool isSignUp;

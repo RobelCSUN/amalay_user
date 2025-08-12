@@ -6,9 +6,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 
 class Country {
   final String name;
-  final String isoCode;   // e.g., "US", "ET"
-  final String dialCode;  // e.g., "+1", "+251"
-  final String flag;      // emoji flag
+  final String isoCode; // e.g., "US", "ET"
+  final String dialCode; // e.g., "+1", "+251"
+  final String flag; // emoji flag
 
   const Country(this.name, this.isoCode, this.dialCode, this.flag);
 }
@@ -37,7 +37,8 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
   final _auth = FirebaseAuth.instance;
 
   Country? _selectedCountry;
-  final _nationalNumberCtrl = TextEditingController(); // number WITHOUT country code
+  final _nationalNumberCtrl =
+      TextEditingController(); // number WITHOUT country code
   final _codeCtrl = TextEditingController();
 
   String? _verificationId;
@@ -87,7 +88,9 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
     }
 
     setState(() => _sending = true);
-    print('📞 verifyPhoneNumber | phone="$phoneE164" | resendToken=$_resendToken');
+    print(
+      '📞 verifyPhoneNumber | phone="$phoneE164" | resendToken=$_resendToken',
+    );
 
     try {
       await _auth.verifyPhoneNumber(
@@ -109,7 +112,9 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
           _snack(e.message ?? 'Verification failed');
         },
         codeSent: (String verificationId, int? resendToken) {
-          print('📨 codeSent: verificationId=$verificationId, resendToken=$resendToken');
+          print(
+            '📨 codeSent: verificationId=$verificationId, resendToken=$resendToken',
+          );
           setState(() {
             _verificationId = verificationId;
             _resendToken = resendToken;
@@ -151,7 +156,9 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
       print('✅ manual sign-in success: uid=${result.user?.uid}');
       if (mounted) Navigator.pop(context, true);
     } on FirebaseAuthException catch (e) {
-      print('❌ signInWithCredential error: code=${e.code} message=${e.message}');
+      print(
+        '❌ signInWithCredential error: code=${e.code} message=${e.message}',
+      );
       _snack(e.message ?? 'Invalid code');
     } catch (e) {
       print('🔥 signInWithCredential unknown error: $e');
@@ -172,7 +179,10 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
           if (_codeSent)
             TextButton(
               onPressed: _sending ? null : () => _sendCode(isResend: true),
-              child: const Text('Resend', style: TextStyle(color: Colors.white)),
+              child: const Text(
+                'Resend',
+                style: TextStyle(color: Colors.white),
+              ),
             ),
         ],
       ),
@@ -194,8 +204,10 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                       items: kCountries.map((c) {
                         return DropdownMenuItem(
                           value: c,
-                          child: Text('${c.flag} ${c.name} (${c.dialCode})',
-                              overflow: TextOverflow.ellipsis),
+                          child: Text(
+                            '${c.flag} ${c.name} (${c.dialCode})',
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         );
                       }).toList(),
                       onChanged: (c) => setState(() => _selectedCountry = c),
@@ -219,8 +231,10 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                             style: const TextStyle(fontSize: 16),
                           ),
                         ),
-                        prefixIconConstraints:
-                            const BoxConstraints(minWidth: 0, minHeight: 0),
+                        prefixIconConstraints: const BoxConstraints(
+                          minWidth: 0,
+                          minHeight: 0,
+                        ),
                       ),
                     ),
                     const SizedBox(height: 20),
