@@ -8,6 +8,7 @@ import '../../services/auth/phone_auth_screen.dart';
 
 import '../../widgets/signed_in_card.dart';
 import '../../widgets/auth_card.dart';
+import '../../onboarding/create_profile_screen.dart'; // ← NEW
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -19,6 +20,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   bool _isSignUp = false; // copy-only toggle
   late final AuthService _authService;
+  bool _pushedProfileFlow = false; // avoid double navigation
 
   @override
   void initState() {
@@ -27,25 +29,21 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _handleGoogle() async {
-    // clear any stale snackbars
     if (mounted) ScaffoldMessenger.of(context).clearSnackBars();
 
-    // ---- STEP 1: Google Auth ONLY
+    // 1) Auth only
     try {
       debugPrint('[Auth] Google sign-in: start');
       await _authService.signInWithGoogle();
       debugPrint('[Auth] Google sign-in: success');
     } on FirebaseAuthException catch (e) {
-      if (e.code == 'canceled') {
-        debugPrint('[Auth] Google sign-in: user canceled');
-        return;
-      }
+      if (e.code == 'canceled') return;
       debugPrint('[Auth] Google sign-in ERROR: ${e.code} ${e.message}');
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Google sign-in failed')),
       );
-      return; // stop here; don’t run Firestore step
+      return;
     } catch (e) {
       debugPrint('[Auth] Google sign-in ERROR: $e');
       if (!mounted) return;
@@ -55,20 +53,14 @@ class _HomeScreenState extends State<HomeScreen> {
       return;
     }
 
-    // ---- STEP 2: Firestore (best-effort; never show "Google failed")
+    // 2) Firestore best-effort
     try {
       final user = FirebaseAuth.instance.currentUser;
-      if (user == null) {
-        debugPrint('[Auth] Google sign-in succeeded but currentUser==null');
-        return;
-      }
-      debugPrint('[Repo] ensureUserDoc + touchLogin for ${user.uid}');
+      if (user == null) return;
       final repo = UserRepository();
       await repo.ensureUserDoc(user);
       await repo.touchLogin(user.uid);
-      debugPrint('[Repo] user doc ok');
     } catch (e) {
-      // Don’t confuse user: log only
       debugPrint('[Repo] ensure/touch failed (ignored): $e');
     }
   }
@@ -97,7 +89,7 @@ class _HomeScreenState extends State<HomeScreen> {
       return;
     }
 
-    // best-effort Firestore
+    // Firestore best-effort
     try {
       final user = FirebaseAuth.instance.currentUser;
       if (user == null) return;
@@ -127,6 +119,7 @@ class _HomeScreenState extends State<HomeScreen> {
     } finally {
       if (!mounted) return;
       ScaffoldMessenger.of(context).clearSnackBars();
+      _pushedProfileFlow = false; // reset navigation guard
       setState(() {});
     }
   }
@@ -150,40 +143,67 @@ class _HomeScreenState extends State<HomeScreen> {
             builder: (context, snap) {
               final user = snap.data;
 
-              if (user != null) {
+              // Signed out -> show auth buttons
+              if (user == null) {
                 WidgetsBinding.instance.addPostFrameCallback((_) {
                   if (mounted) {
                     ScaffoldMessenger.of(context).clearSnackBars();
                   }
                 });
-                return Center(
-                  child: SignedInCard(
-                    user: user,
-                    onSignOut: _signOut,
-                  ),
+
+                return Column(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: [
+                    SizedBox(height: MediaQuery.of(context).size.height * 0.40),
+                    Center(
+                      child: AuthCard(
+                        isSignUp: _isSignUp,
+                        onToggleCopy: () => setState(() => _isSignUp = !_isSignUp),
+                        onGoogle: () { _handleGoogle(); },
+                        onPhone:  () { _openPhoneAuth(); },
+                        onApple:  () { _handleApple(); },
+                      ),
+                    ),
+                  ],
                 );
               }
 
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                if (mounted) {
-                  ScaffoldMessenger.of(context).clearSnackBars();
-                }
-              });
+              // Signed in -> decide where to go based on profile completeness
+              return FutureBuilder<bool>(
+                future: UserRepository().isProfileComplete(user.uid),
+                builder: (context, snap2) {
+                  if (snap2.connectionState == ConnectionState.waiting) {
+                    // Tiny loader while checking Firestore
+                    return const Center(child: CircularProgressIndicator());
+                  }
 
-              return Column(
-                mainAxisAlignment: MainAxisAlignment.start,
-                children: [
-                  SizedBox(height: MediaQuery.of(context).size.height * 0.40),
-                  Center(
-                    child: AuthCard(
-                      isSignUp: _isSignUp,
-                      onToggleCopy: () => setState(() => _isSignUp = !_isSignUp),
-                      onGoogle: _handleGoogle,
-                      onPhone: _openPhoneAuth,
-                      onApple: _handleApple,
+                  final complete = snap2.data == true;
+
+                  if (!complete && !_pushedProfileFlow) {
+                    // Navigate once to create profile
+                    _pushedProfileFlow = true;
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                      if (!mounted) return;
+                      Navigator.of(context).pushReplacement(
+                        MaterialPageRoute(
+                          builder: (_) => const CreateProfileScreen(),
+                        ),
+                      );
+                    });
+                    return const SizedBox.shrink();
+                  }
+
+                  // Profile complete -> show your signed-in card
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    if (mounted) ScaffoldMessenger.of(context).clearSnackBars();
+                  });
+                  return Center(
+                    child: SignedInCard(
+                      user: user,
+                      onSignOut: _signOut,
                     ),
-                  ),
-                ],
+                  );
+                },
               );
             },
           ),
