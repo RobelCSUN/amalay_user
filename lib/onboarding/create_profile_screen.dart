@@ -1,10 +1,9 @@
-// lib/screens/profile/create_profile_screen.dart
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
-import '../../repositories/user_repository.dart';
-import '../../services/auth/auth_service.dart';
-import '../../screens/home/home_screen.dart'; // ⬅️ add this
+import 'package:amalay_user/repositories/user_repository.dart';
+import 'package:amalay_user/services/auth/auth_service.dart';
+import 'package:amalay_user/screens/home/home_screen.dart'; // go back to home after save
 
 class CreateProfileScreen extends StatefulWidget {
   const CreateProfileScreen({super.key});
@@ -33,25 +32,33 @@ class _CreateProfileScreenState extends State<CreateProfileScreen> {
     if (user == null) return;
     if (name.isEmpty) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter your name')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Please enter your name')));
       return;
     }
 
     setState(() => _saving = true);
     try {
+      // Update Firebase Auth display name
       await user.updateDisplayName(name);
       await FirebaseAuth.instance.currentUser?.reload();
+
+      // Mark profile complete in Firestore
       await _repo.markProfileComplete(user.uid, displayName: name);
 
       if (!mounted) return;
-      Navigator.of(context).pop(true);
+
+      // Instead of pop(), go to HomeScreen which will show SignedInCard
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => const HomeScreen()),
+        (route) => false,
+      );
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.toString())),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(e.toString())));
     } finally {
       if (mounted) setState(() => _saving = false);
     }
@@ -65,21 +72,19 @@ class _CreateProfileScreenState extends State<CreateProfileScreen> {
       await _authService.signOut();
 
       if (!mounted) return;
-      // Show quick feedback
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Signed out')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Signed out')));
 
-      // 🔑 Force-return to the login screen
       Navigator.of(context).pushAndRemoveUntil(
         MaterialPageRoute(builder: (_) => const HomeScreen()),
         (route) => false,
       );
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Sign out failed: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Sign out failed: $e')));
     }
   }
 
@@ -126,7 +131,8 @@ class _CreateProfileScreenState extends State<CreateProfileScreen> {
                   onPressed: _saving ? null : _save,
                   child: _saving
                       ? const SizedBox(
-                          width: 20, height: 20,
+                          width: 20,
+                          height: 20,
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
                       : const Text('Save & Continue'),

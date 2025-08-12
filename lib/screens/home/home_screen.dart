@@ -2,13 +2,13 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
-import '../../services/auth/auth_service.dart';
-import '../../repositories/user_repository.dart';
-import '../../services/auth/phone_auth_screen.dart';
+import 'package:amalay_user/services/auth/auth_service.dart';
+import 'package:amalay_user/repositories/user_repository.dart';
+import 'package:amalay_user/services/auth/phone_auth_screen.dart';
 
-import '../../widgets/signed_in_card.dart';
-import '../../widgets/auth_card.dart';
-import '../../onboarding/create_profile_screen.dart'; // ← NEW
+import 'package:amalay_user/widgets/signed_in_card.dart';
+import 'package:amalay_user/widgets/auth_card.dart';
+import 'package:amalay_user/onboarding/create_profile_screen.dart'; // ← NEW
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -40,16 +40,16 @@ class _HomeScreenState extends State<HomeScreen> {
       if (e.code == 'canceled') return;
       debugPrint('[Auth] Google sign-in ERROR: ${e.code} ${e.message}');
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Google sign-in failed')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Google sign-in failed')));
       return;
     } catch (e) {
       debugPrint('[Auth] Google sign-in ERROR: $e');
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Google sign-in failed')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Google sign-in failed')));
       return;
     }
 
@@ -76,16 +76,16 @@ class _HomeScreenState extends State<HomeScreen> {
       if (e.code == 'canceled') return;
       debugPrint('[Auth] Apple sign-in ERROR: ${e.code} ${e.message}');
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Apple sign-in failed')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Apple sign-in failed')));
       return;
     } catch (e) {
       debugPrint('[Auth] Apple sign-in ERROR: $e');
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Apple sign-in failed')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Apple sign-in failed')));
       return;
     }
 
@@ -158,10 +158,17 @@ class _HomeScreenState extends State<HomeScreen> {
                     Center(
                       child: AuthCard(
                         isSignUp: _isSignUp,
-                        onToggleCopy: () => setState(() => _isSignUp = !_isSignUp),
-                        onGoogle: () { _handleGoogle(); },
-                        onPhone:  () { _openPhoneAuth(); },
-                        onApple:  () { _handleApple(); },
+                        onToggleCopy: () =>
+                            setState(() => _isSignUp = !_isSignUp),
+                        onGoogle: () {
+                          _handleGoogle();
+                        },
+                        onPhone: () {
+                          _openPhoneAuth();
+                        },
+                        onApple: () {
+                          _handleApple();
+                        },
                       ),
                     ),
                   ],
@@ -198,10 +205,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     if (mounted) ScaffoldMessenger.of(context).clearSnackBars();
                   });
                   return Center(
-                    child: SignedInCard(
-                      user: user,
-                      onSignOut: _signOut,
-                    ),
+                    child: SignedInCard(user: user, onSignOut: _signOut),
                   );
                 },
               );
