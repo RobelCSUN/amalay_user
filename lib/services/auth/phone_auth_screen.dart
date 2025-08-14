@@ -224,7 +224,6 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                         ),
                         const SizedBox(height: 12),
 
-                        // National number field
                         TextField(
                           focusNode: _numberFocus,
                           controller: _nationalNumberCtrl,
@@ -237,19 +236,22 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                             hintText: _selectedCountry?.isoCode == 'US'
                                 ? '5551234567'
                                 : '912345678',
-                            prefixIcon: Padding(
+                            prefix: Padding(
                               padding: const EdgeInsets.only(
-                                left: 12,
                                 right: 8,
-                              ),
+                              ), // space between +1 and number
                               child: Text(
                                 _selectedCountry?.dialCode ?? '',
-                                style: const TextStyle(fontSize: 16),
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  color: Colors.black87,
+                                ),
                               ),
                             ),
-                            prefixIconConstraints: const BoxConstraints(
-                              minWidth: 0,
-                              minHeight: 0,
+                            // remove prefixIcon entirely so it aligns with text
+                            isDense: true, // reduce height
+                            contentPadding: const EdgeInsets.symmetric(
+                              vertical: 12,
                             ),
                           ),
                         ),
