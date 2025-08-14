@@ -1,5 +1,6 @@
+// lib/widgets/sign_in/apple_sign_in_button.dart
 import 'package:flutter/material.dart';
-import 'package:sign_in_with_apple/sign_in_with_apple.dart';
+import 'package:amalay_user/widgets/sign_in/circular_icon_button.dart';
 
 class AppleSignInFullWidthButton extends StatelessWidget {
   final double width;
@@ -18,11 +19,19 @@ class AppleSignInFullWidthButton extends StatelessWidget {
     return SizedBox(
       width: width,
       height: height,
-      child: SignInWithAppleButton(
-        onPressed: onPressed,
-        style: SignInWithAppleButtonStyle.black, // Can also be white or whiteOutline
-        borderRadius: const BorderRadius.all(Radius.circular(30)),
-        text: 'Continue with Apple', // ✅ Official allowed text option
+      child: Center(
+        child: CircularIconButton(
+          size: height, // circle diameter
+          icon: Icons.apple, // Apple logo icon
+          tooltip: 'Continue with Apple',
+          onPressed: onPressed,
+          iconColor: Colors.white,
+          backgroundColor: Colors.transparent,
+          borderColor: Colors.white.withOpacity(0.5),
+          borderWidth: 2,
+          splashColor: Colors.white.withOpacity(0.2),
+          highlightColor: Colors.white.withOpacity(0.08),
+        ),
       ),
     );
   }

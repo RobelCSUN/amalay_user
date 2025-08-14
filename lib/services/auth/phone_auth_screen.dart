@@ -4,8 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
-// uses your extracted types/data:
-// lib/data/countries_area_code.dart must export `class Country` and `kCountries`
+// Theme + data
+import 'package:amalay_user/theme/app_colors.dart';
 import 'package:amalay_user/data/countries_area_code.dart';
 
 class PhoneAuthScreen extends StatefulWidget {
@@ -22,7 +22,7 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
   final _nationalNumberCtrl = TextEditingController();
   final _codeCtrl = TextEditingController();
 
-  // NEW: focus node so the keyboard shows immediately
+  // Focus the number field on load
   final _numberFocus = FocusNode();
 
   String? _verificationId;
@@ -33,15 +33,18 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
   @override
   void initState() {
     super.initState();
+
+    // Pick default country from device locale (fallback to US)
     final ui.Locale sysLocale = ui.PlatformDispatcher.instance.locale;
     final cc = (sysLocale.countryCode ?? '').toUpperCase();
     _selectedCountry = kCountries.firstWhere(
       (c) => c.isoCode == cc,
       orElse: () => kCountries.firstWhere((c) => c.isoCode == 'US'),
     );
+
     _auth.setLanguageCode('en').catchError((_) {});
 
-    // Focus the number field after the first frame
+    // Focus the number field after first frame
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _numberFocus.requestFocus();
     });
@@ -51,7 +54,7 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
   void dispose() {
     _nationalNumberCtrl.dispose();
     _codeCtrl.dispose();
-    _numberFocus.dispose(); // dispose focus node
+    _numberFocus.dispose();
     super.dispose();
   }
 
@@ -85,7 +88,7 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
         forceResendingToken: isResend ? _resendToken : null,
         verificationCompleted: (PhoneAuthCredential cred) async {
           try {
-            final res = await _auth.signInWithCredential(cred);
+            await _auth.signInWithCredential(cred);
             if (mounted) Navigator.pop(context, true);
           } catch (_) {
             _snack('Auto sign-in failed');
@@ -143,149 +146,174 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
   Widget build(BuildContext context) {
     final verifying = _codeSent;
 
-    return Scaffold(
-      backgroundColor: Colors
-          .grey[200], // 👈 sets full-screen background (This need to be in css)
-      appBar: AppBar(
-        backgroundColor:
-            Colors.grey[200], // AppBar background (This needs to be in css)
-        title: const Text('Phone Sign-In'),
-        actions: [
-          if (_codeSent)
-            TextButton(
-              onPressed: _sending ? null : () => _sendCode(isResend: true),
-              child: const Text(
-                'Resend',
-                style: TextStyle(color: Colors.white),
-              ),
-            ),
-        ],
+    // ⬇️ Put the gradient OUTSIDE the Scaffold and make Scaffold transparent
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          colors: AppColors.backgroundGradient,
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
       ),
-
-      // CHANGED: align content to the top (not centered)
-      body: SingleChildScrollView(
-        child: Align(
-          alignment: Alignment.topCenter,
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 420),
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Friendly intro copy
-                  const Text(
-                    'Verify your phone',
-                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700),
-                  ),
-                  const SizedBox(height: 8),
-                  const Text(
-                    'We need to confirm you’re a real person with a real phone number. '
-                    'We’ll send a one-time code by SMS.',
-                    style: TextStyle(fontSize: 14),
-                  ),
-                  const SizedBox(height: 20),
-
-                  if (!verifying) ...[
-                    // Country dropdown
-                    DropdownButtonFormField<Country>(
-                      value: _selectedCountry,
-                      isExpanded: true,
-                      decoration: const InputDecoration(labelText: 'Country'),
-                      items: kCountries.map((c) {
-                        return DropdownMenuItem(
-                          value: c,
-                          child: Text(
-                            '${c.flag} ${c.name} (${c.dialCode})',
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        );
-                      }).toList(),
-                      onChanged: (c) => setState(() => _selectedCountry = c),
-                    ),
-                    const SizedBox(height: 12),
-
-                    // National number field
-                    TextField(
-                      focusNode: _numberFocus, // attach focus
-                      controller: _nationalNumberCtrl,
-                      keyboardType: TextInputType.phone,
-                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                      decoration: InputDecoration(
-                        labelText: 'Number',
-                        hintText: _selectedCountry?.isoCode == 'US'
-                            ? '5551234567'
-                            : '912345678',
-                        prefixIcon: Padding(
-                          padding: const EdgeInsets.only(left: 12, right: 8),
-                          child: Text(
-                            _selectedCountry?.dialCode ?? '',
-                            style: const TextStyle(fontSize: 16),
-                          ),
-                        ),
-                        prefixIconConstraints: const BoxConstraints(
-                          minWidth: 0,
-                          minHeight: 0,
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        extendBodyBehindAppBar: true,
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          title: const Text('Phone Sign-In'),
+          actions: [
+            if (_codeSent)
+              TextButton(
+                onPressed: _sending ? null : () => _sendCode(isResend: true),
+                child: const Text(
+                  'Resend',
+                  style: TextStyle(color: Colors.white),
+                ),
+              ),
+          ],
+        ),
+        body: SafeArea(
+          child: SingleChildScrollView(
+            child: Align(
+              alignment: Alignment.topCenter,
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 420),
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Heading + helper text
+                      const Text(
+                        'Verify your phone',
+                        style: TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white,
                         ),
                       ),
-                    ),
-                    const SizedBox(height: 20),
+                      const SizedBox(height: 8),
+                      const Text(
+                        'We need to confirm you’re a real person with a real phone number. '
+                        'We’ll send a one-time code by SMS.',
+                        style: TextStyle(fontSize: 14, color: Colors.white70),
+                      ),
+                      const SizedBox(height: 20),
 
-                    // Privacy note above button
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Icon(
-                          Icons.privacy_tip,
-                          size: 18,
-                          color: Colors.grey,
+                      if (!verifying) ...[
+                        // Country dropdown
+                        DropdownButtonFormField<Country>(
+                          value: _selectedCountry,
+                          isExpanded: true,
+                          decoration: const InputDecoration(
+                            labelText: 'Country',
+                          ),
+                          dropdownColor: Colors.white,
+                          items: kCountries.map((c) {
+                            return DropdownMenuItem(
+                              value: c,
+                              child: Text(
+                                '${c.flag} ${c.name} (${c.dialCode})',
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            );
+                          }).toList(),
+                          onChanged: (c) =>
+                              setState(() => _selectedCountry = c),
                         ),
-                        const SizedBox(width: 6),
-                        Expanded(
-                          child: Text(
-                            'Your phone number will not be shown on your profile.',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.grey[700],
+                        const SizedBox(height: 12),
+
+                        // National number field
+                        TextField(
+                          focusNode: _numberFocus,
+                          controller: _nationalNumberCtrl,
+                          keyboardType: TextInputType.phone,
+                          inputFormatters: [
+                            FilteringTextInputFormatter.digitsOnly,
+                          ],
+                          decoration: InputDecoration(
+                            labelText: 'Number',
+                            hintText: _selectedCountry?.isoCode == 'US'
+                                ? '5551234567'
+                                : '912345678',
+                            prefixIcon: Padding(
+                              padding: const EdgeInsets.only(
+                                left: 12,
+                                right: 8,
+                              ),
+                              child: Text(
+                                _selectedCountry?.dialCode ?? '',
+                                style: const TextStyle(fontSize: 16),
+                              ),
+                            ),
+                            prefixIconConstraints: const BoxConstraints(
+                              minWidth: 0,
+                              minHeight: 0,
                             ),
                           ),
                         ),
+                        const SizedBox(height: 20),
+
+                        // Privacy note above button
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Icon(
+                              Icons.privacy_tip,
+                              size: 18,
+                              color: Colors.white70,
+                            ),
+                            const SizedBox(width: 6),
+                            Expanded(
+                              child: Text(
+                                'Your phone number will not be shown on your profile.',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.white.withOpacity(0.85),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+
+                        // Get Verification Code button
+                        SizedBox(
+                          width: double.infinity,
+                          height: 48,
+                          child: ElevatedButton(
+                            onPressed: _sending ? null : () => _sendCode(),
+                            child: const Text('Get Verification Code'),
+                          ),
+                        ),
+                      ] else ...[
+                        TextField(
+                          controller: _codeCtrl,
+                          keyboardType: TextInputType.number,
+                          decoration: const InputDecoration(
+                            labelText: 'SMS code',
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        SizedBox(
+                          width: double.infinity,
+                          height: 48,
+                          child: ElevatedButton(
+                            onPressed: _sending ? null : _verifyCode,
+                            child: const Text('Verify Code'),
+                          ),
+                        ),
                       ],
-                    ),
-                    const SizedBox(height: 12),
 
-                    // Get Verification Code button
-                    SizedBox(
-                      width: double.infinity,
-                      height: 48,
-                      child: ElevatedButton(
-                        onPressed: _sending ? null : () => _sendCode(),
-                        child: const Text('Get Verification Code'),
-                      ),
-                    ),
-                  ] else ...[
-                    TextField(
-                      controller: _codeCtrl,
-                      keyboardType: TextInputType.number,
-                      decoration: const InputDecoration(labelText: 'SMS code'),
-                    ),
-                    const SizedBox(height: 16),
-                    SizedBox(
-                      width: double.infinity,
-                      height: 48,
-                      child: ElevatedButton(
-                        onPressed: _sending ? null : _verifyCode,
-                        child: const Text('Verify Code'),
-                      ),
-                    ),
-                  ],
-
-                  if (_sending)
-                    const Padding(
-                      padding: EdgeInsets.only(top: 16),
-                      child: Center(child: CircularProgressIndicator()),
-                    ),
-                ],
+                      if (_sending)
+                        const Padding(
+                          padding: EdgeInsets.only(top: 16),
+                          child: Center(child: CircularProgressIndicator()),
+                        ),
+                    ],
+                  ),
+                ),
               ),
             ),
           ),

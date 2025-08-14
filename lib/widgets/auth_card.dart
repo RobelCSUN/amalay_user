@@ -5,7 +5,6 @@ import 'package:amalay_user/widgets/sign_in/google_sign_in_button.dart';
 import 'package:amalay_user/widgets/sign_in/apple_sign_in_button.dart';
 import 'package:amalay_user/widgets/sign_in/phone_sign_in_button.dart';
 
-// Legal screens (you created these in widgets/legal/)
 import 'package:amalay_user/widgets/legal/terms_of_service_dialog.dart';
 import 'package:amalay_user/widgets/legal/privacy_policy_dialog.dart';
 import 'package:amalay_user/widgets/legal/cookies_policy_dialog.dart';
@@ -33,7 +32,7 @@ class AuthCard extends StatelessWidget {
       margin: const EdgeInsets.symmetric(horizontal: 24),
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.95),
+        color: Colors.transparent,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
@@ -46,7 +45,6 @@ class AuthCard extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Title + subtitle (unchanged)
           Text(
             isSignUp ? 'Create your account' : 'Amalay',
             style: const TextStyle(
@@ -67,32 +65,32 @@ class AuthCard extends StatelessWidget {
               height: 1.35,
             ),
           ),
-
           const SizedBox(height: 24),
 
-          // Buttons (your existing widgets/logic)
-          GoogleSignInFullWidthButton(
-            width: double.infinity,
-            height: 48,
-            onPressed: onGoogle,
-          ),
-          const SizedBox(height: 12),
-          PhoneSignInFullWidthButton(
-            width: double.infinity,
-            height: 48,
-            onPressed: onPhone,
-          ),
-          const SizedBox(height: 12),
-          AppleSignInFullWidthButton(
-            width: double.infinity,
-            height: 48,
-            onPressed: onApple,
+          /// Sign-in buttons in a row
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              GoogleSignInFullWidthButton(
+                width: 56,
+                height: 56,
+                onPressed: onGoogle,
+              ),
+              PhoneSignInFullWidthButton(
+                width: 56,
+                height: 56,
+                onPressed: onPhone,
+              ),
+              AppleSignInFullWidthButton(
+                width: 56,
+                height: 56,
+                onPressed: onApple,
+              ),
+            ],
           ),
 
-          // Slightly tighter gap before the separator
-          const SizedBox(height: 12),
+          const SizedBox(height: 20),
 
-          // ---------- or ----------
           Row(
             children: const [
               Expanded(child: Divider(color: Colors.black45, thickness: 1)),
@@ -106,11 +104,8 @@ class AuthCard extends StatelessWidget {
               Expanded(child: Divider(color: Colors.black45, thickness: 1)),
             ],
           ),
-
-          // Narrow gap between "or" and the toggle link
           const SizedBox(height: 10),
 
-          // Toggle link (Sign in <-> Sign up)
           GestureDetector(
             onTap: onToggleCopy,
             child: Text(
@@ -124,11 +119,8 @@ class AuthCard extends StatelessWidget {
               ),
             ),
           ),
-
-          // A bit more space before legal line
           const SizedBox(height: 16),
 
-          // Legal sentence shown ALWAYS (as requested)
           Text.rich(
             TextSpan(
               text: 'By continuing, you agree to our ',
@@ -196,7 +188,6 @@ class _LegalLink extends StatelessWidget {
     return InkWell(
       onTap: onTap,
       child: Padding(
-        // small vertical padding to enlarge tap target a bit
         padding: const EdgeInsets.symmetric(vertical: 2),
         child: Text(
           label,

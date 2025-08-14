@@ -1,5 +1,6 @@
 // lib/widgets/sign_in/phone_sign_in_button.dart
 import 'package:flutter/material.dart';
+import 'package:amalay_user/widgets/sign_in/circular_icon_button.dart';
 
 class PhoneSignInFullWidthButton extends StatelessWidget {
   final double width;
@@ -15,54 +16,21 @@ class PhoneSignInFullWidthButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Match Google/Apple pill look: white card, light shadow, subtle outline.
-    final borderRadius = BorderRadius.circular(30);
-
     return SizedBox(
-      width: width,
+      width: width, // can be double.infinity for full-width alignment
       height: height,
-      child: Material(
-        color: Colors.white,
-        elevation: 2, // subtle depth like Google button
-        shadowColor: Colors.black26,
-        borderRadius: borderRadius,
-        child: InkWell(
-          onTap: onPressed,
-          borderRadius: borderRadius,
-          splashColor: Colors.black12, // gentle feedback
-          highlightColor: Colors.transparent,
-          child: Container(
-            decoration: BoxDecoration(
-              borderRadius: borderRadius,
-              border: Border.all(color: Colors.black26, width: 1),
-            ),
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              mainAxisSize: MainAxisSize.max,
-              children: const [
-                // Fixed 24px icon slot so all three buttons align perfectly.
-                SizedBox(
-                  width: 24,
-                  height: 24,
-                  child: Center(
-                    child: Icon(Icons.phone, size: 20, color: Colors.black54),
-                  ),
-                ),
-                SizedBox(width: 12),
-                Text(
-                  'Continue with Phone',
-                  style: TextStyle(
-                    fontSize: 15,
-                    color: Color.fromARGB(221, 70, 69, 69),
-                    fontWeight: FontWeight.w500,
-                    height: 1.0, // keeps baseline consistent
-                  ),
-                ),
-              ],
-            ),
-          ),
+      child: Center(
+        child: CircularIconButton(
+          size: height, // circle diameter = height
+          icon: Icons.phone,
+          tooltip: 'Continue with Phone',
+          onPressed: onPressed,
+          iconColor: Colors.white,
+          backgroundColor: Colors.transparent,
+          borderColor: Colors.white.withOpacity(0.5),
+          borderWidth: 2,
+          splashColor: Colors.white.withOpacity(0.2),
+          highlightColor: Colors.white.withOpacity(0.08),
         ),
       ),
     );

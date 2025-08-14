@@ -8,6 +8,7 @@ import 'package:amalay_user/services/auth/phone_auth_screen.dart';
 import 'package:amalay_user/widgets/signed_in_card.dart';
 import 'package:amalay_user/widgets/auth_card.dart';
 import 'package:amalay_user/onboarding/create_profile_screen.dart';
+import 'package:amalay_user/theme/app_colors.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -134,7 +135,7 @@ class _HomeScreenState extends State<HomeScreen> {
         height: double.infinity,
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            colors: [Color(0xFFFFA726), Color(0xFFFF7043)],
+            colors: AppColors.backgroundGradient,
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
           ),
@@ -154,7 +155,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 return Column(
                   mainAxisAlignment: MainAxisAlignment.start,
                   children: [
-                    SizedBox(height: MediaQuery.of(context).size.height * 0.40),
+                    SizedBox(height: MediaQuery.of(context).size.height * 0.52),
                     Center(
                       child: AuthCard(
                         isSignUp: _isSignUp,
