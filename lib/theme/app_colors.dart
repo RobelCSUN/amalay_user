@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
 
 class AppColors {
-  // 🔹 Global background gradient for the whole app
+  // 🌌 Cosmic Sky Bluish Theme
   static const List<Color> backgroundGradient = [
-    Color(0xFF144E75), // deep ocean navy
-    Color(0xFF2E8B8B), // teal ocean shallows
-    Color(0xFF6ECEDA), // bright tropical sky
+    Color(0xFF0F3057), // deep cosmic navy
+    Color(0xFF2C74B3), // celestial blue
+    Color(0xFF6BCBFF), // bright sky glow
   ];
 
   // (Optional) Add other shared colors here
   static const Color primaryText = Colors.black87;
   static const Color secondaryText = Colors.black54;
+
+  // Shared divider color
+  static const Color divider = Colors.white54; // 🔹 translucent white
 }

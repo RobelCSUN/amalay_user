@@ -7,6 +7,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 // Theme + data
 import 'package:amalay_user/theme/app_colors.dart';
 import 'package:amalay_user/data/countries_area_code.dart';
+import 'package:amalay_user/theme/app_text_styles.dart';
 
 class PhoneAuthScreen extends StatefulWidget {
   const PhoneAuthScreen({super.key});
@@ -146,7 +147,6 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
   Widget build(BuildContext context) {
     final verifying = _codeSent;
 
-    // ⬇️ Put the gradient OUTSIDE the Scaffold and make Scaffold transparent
     return Container(
       decoration: const BoxDecoration(
         gradient: LinearGradient(
@@ -161,14 +161,18 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
         appBar: AppBar(
           backgroundColor: Colors.transparent,
           elevation: 0,
-          title: const Text('Phone Sign-In'),
+          iconTheme: const IconThemeData(color: Colors.white),
+          title: Text(
+            'Phone Sign-In',
+            style: AppTextStyles.heroTitle.copyWith(fontSize: 20),
+          ),
           actions: [
             if (_codeSent)
               TextButton(
                 onPressed: _sending ? null : () => _sendCode(isResend: true),
-                child: const Text(
+                child: Text(
                   'Resend',
-                  style: TextStyle(color: Colors.white),
+                  style: AppTextStyles.link.copyWith(fontSize: 14),
                 ),
               ),
           ],
@@ -184,72 +188,75 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Heading + helper text
-                      const Text(
+                      Text(
                         'Verify your phone',
-                        style: TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.white,
-                        ),
+                        style: AppTextStyles.heroTitle.copyWith(fontSize: 22),
                       ),
                       const SizedBox(height: 8),
-                      const Text(
+                      Text(
                         'We need to confirm you’re a real person with a real phone number. '
                         'We’ll send a one-time code by SMS.',
-                        style: TextStyle(fontSize: 14, color: Colors.white70),
+                        style: AppTextStyles.heroBody.copyWith(fontSize: 14),
                       ),
                       const SizedBox(height: 20),
 
                       if (!verifying) ...[
-                        // Country dropdown
                         DropdownButtonFormField<Country>(
                           value: _selectedCountry,
                           isExpanded: true,
-                          decoration: const InputDecoration(
+                          style: AppTextStyles.heroBody,
+                          decoration: InputDecoration(
                             labelText: 'Country',
+                            labelStyle: AppTextStyles.heroBody,
                           ),
-                          dropdownColor: Colors.white,
+                          dropdownColor: AppColors.backgroundGradient.first
+                              .withOpacity(0.95),
                           items: kCountries.map((c) {
                             return DropdownMenuItem(
                               value: c,
                               child: Text(
                                 '${c.flag} ${c.name} (${c.dialCode})',
                                 overflow: TextOverflow.ellipsis,
+                                style: AppTextStyles.heroBody,
                               ),
                             );
                           }).toList(),
                           onChanged: (c) =>
                               setState(() => _selectedCountry = c),
+                          iconEnabledColor: AppTextStyles.heroBody.color
+                              ?.withOpacity(0.85),
                         ),
                         const SizedBox(height: 12),
 
                         TextField(
                           focusNode: _numberFocus,
                           controller: _nationalNumberCtrl,
+                          style: AppTextStyles.heroBody,
                           keyboardType: TextInputType.phone,
                           inputFormatters: [
                             FilteringTextInputFormatter.digitsOnly,
                           ],
                           decoration: InputDecoration(
                             labelText: 'Number',
+                            labelStyle: AppTextStyles.heroBody,
+                            hintStyle: AppTextStyles.heroBody.copyWith(
+                              color: AppTextStyles.heroBody.color?.withOpacity(
+                                0.7,
+                              ),
+                            ),
                             hintText: _selectedCountry?.isoCode == 'US'
                                 ? '5551234567'
                                 : '912345678',
                             prefix: Padding(
-                              padding: const EdgeInsets.only(
-                                right: 8,
-                              ), // space between +1 and number
+                              padding: const EdgeInsets.only(right: 8),
                               child: Text(
                                 _selectedCountry?.dialCode ?? '',
-                                style: const TextStyle(
+                                style: AppTextStyles.heroBody.copyWith(
                                   fontSize: 16,
-                                  color: Colors.black87,
                                 ),
                               ),
                             ),
-                            // remove prefixIcon entirely so it aligns with text
-                            isDense: true, // reduce height
+                            isDense: true,
                             contentPadding: const EdgeInsets.symmetric(
                               vertical: 12,
                             ),
@@ -257,22 +264,22 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                         ),
                         const SizedBox(height: 20),
 
-                        // Privacy note above button
                         Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Icon(
+                            Icon(
                               Icons.privacy_tip,
                               size: 18,
-                              color: Colors.white70,
+                              color: AppTextStyles.heroBody.color?.withOpacity(
+                                0.9,
+                              ),
                             ),
                             const SizedBox(width: 6),
                             Expanded(
                               child: Text(
                                 'Your phone number will not be shown on your profile.',
-                                style: TextStyle(
+                                style: AppTextStyles.legal.copyWith(
                                   fontSize: 12,
-                                  color: Colors.white.withOpacity(0.85),
                                 ),
                               ),
                             ),
@@ -280,11 +287,22 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                         ),
                         const SizedBox(height: 12),
 
-                        // Get Verification Code button
                         SizedBox(
                           width: double.infinity,
                           height: 48,
                           child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.white, // solid white pill
+                              foregroundColor:
+                                  Colors.black87, // icon/text color
+                              elevation: 1,
+                              shape: const StadiumBorder(),
+                              textStyle: AppTextStyles.button.copyWith(
+                                color: Colors.black87,
+                                // Remove any text shadows so it stays crisp on light pill
+                                shadows: const [],
+                              ),
+                            ),
                             onPressed: _sending ? null : () => _sendCode(),
                             child: const Text('Get Verification Code'),
                           ),
@@ -292,9 +310,16 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                       ] else ...[
                         TextField(
                           controller: _codeCtrl,
+                          style: AppTextStyles.heroBody,
                           keyboardType: TextInputType.number,
-                          decoration: const InputDecoration(
+                          decoration: InputDecoration(
                             labelText: 'SMS code',
+                            labelStyle: AppTextStyles.heroBody,
+                            hintStyle: AppTextStyles.heroBody.copyWith(
+                              color: AppTextStyles.heroBody.color?.withOpacity(
+                                0.7,
+                              ),
+                            ),
                           ),
                         ),
                         const SizedBox(height: 16),
@@ -302,6 +327,16 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                           width: double.infinity,
                           height: 48,
                           child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.white,
+                              foregroundColor: Colors.black87,
+                              elevation: 1,
+                              shape: const StadiumBorder(),
+                              textStyle: AppTextStyles.button.copyWith(
+                                color: Colors.black87,
+                                shadows: const [],
+                              ),
+                            ),
                             onPressed: _sending ? null : _verifyCode,
                             child: const Text('Verify Code'),
                           ),
