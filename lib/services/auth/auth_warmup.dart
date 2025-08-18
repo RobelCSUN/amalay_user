@@ -11,18 +11,16 @@ class AuthWarmup {
   static bool? get appleAvailable => _appleAvailable;
 
   /// Call once at app start. Runs quick, returns when all pre-warm tasks finish or time out.
-  static Future<void> run({Duration timeout = const Duration(seconds: 2)}) async {
+  static Future<void> run({
+    Duration timeout = const Duration(seconds: 2),
+  }) async {
     if (_didRun) return;
     _didRun = true;
 
     // Optional niceties
     FirebaseAuth.instance.setLanguageCode('en'); // or user locale
 
-    final tasks = <Future>[
-      _warmGoogle(),
-      _warmApple(),
-      _warmPhone(),
-    ];
+    final tasks = <Future>[_warmGoogle(), _warmApple(), _warmPhone()];
 
     // Don’t block startup forever—cap total time
     await Future.any([

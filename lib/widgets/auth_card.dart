@@ -46,17 +46,13 @@ class AuthCard extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(
-            isSignUp ? 'Create your account' : 'Amalay',
-            style: AppTextStyles.heroTitle.copyWith(fontSize: 30),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            isSignUp
-                ? 'Sign up to start turning quiet weekends into unforgettable moments.'
-                : 'Just a swipe away from turning quiet weekends into unforgettable moments together.',
-            textAlign: TextAlign.center,
-            style: AppTextStyles.heroBody,
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              isSignUp ? 'Find your match' : 'Adventure awaits',
+              maxLines: 1,
+              style: AppTextStyles.heroTitle.copyWith(fontSize: 34),
+            ),
           ),
           const SizedBox(height: 24),
 
@@ -108,7 +104,7 @@ class AuthCard extends StatelessWidget {
               style: AppTextStyles.link,
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 90),
 
           Text.rich(
             TextSpan(
