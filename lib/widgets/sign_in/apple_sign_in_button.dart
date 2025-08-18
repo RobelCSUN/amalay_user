@@ -23,7 +23,6 @@ class AppleSignInFullWidthButton extends StatelessWidget {
         child: CircularIconButton(
           size: height, // circle diameter
           icon: Icons.apple, // Apple logo icon
-          tooltip: 'Continue with Apple',
           onPressed: onPressed,
           iconColor: Colors.white,
           backgroundColor: Colors.transparent,

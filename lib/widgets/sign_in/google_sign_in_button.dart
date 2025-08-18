@@ -25,7 +25,6 @@ class GoogleSignInFullWidthButton extends StatelessWidget {
           size: height, // circle diameter = button height
           icon: Icons.g_mobiledata, // replace with a proper "Google G" icon
 
-          tooltip: 'Continue with Google',
           onPressed: onPressed,
           iconColor: Colors.white,
           backgroundColor: Colors.transparent,

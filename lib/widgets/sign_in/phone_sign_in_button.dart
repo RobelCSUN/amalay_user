@@ -23,7 +23,6 @@ class PhoneSignInFullWidthButton extends StatelessWidget {
         child: CircularIconButton(
           size: height, // circle diameter = height
           icon: Icons.phone,
-          tooltip: 'Continue with Phone',
           onPressed: onPressed,
           iconColor: Colors.white,
           backgroundColor: Colors.transparent,

@@ -1,5 +1,6 @@
 // lib/screens/auth/phone_auth_screen.dart
 import 'dart:ui' as ui;
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -25,11 +26,13 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
 
   // Focus the number field on load
   final _numberFocus = FocusNode();
+  final GlobalKey _countryFieldKey = GlobalKey();
 
   String? _verificationId;
   int? _resendToken;
   bool _sending = false;
   bool _codeSent = false;
+  bool _countryMenuOpen = false;
 
   @override
   void initState() {
@@ -48,6 +51,10 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
     // Focus the number field after first frame
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _numberFocus.requestFocus();
+    });
+
+    _nationalNumberCtrl.addListener(() {
+      if (mounted) setState(() {});
     });
   }
 
@@ -146,6 +153,9 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
   @override
   Widget build(BuildContext context) {
     final verifying = _codeSent;
+    final underlineWhite = const UnderlineInputBorder(
+      borderSide: BorderSide(color: Colors.white70, width: 1.2),
+    );
 
     return Container(
       decoration: const BoxDecoration(
@@ -201,30 +211,137 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                       const SizedBox(height: 20),
 
                       if (!verifying) ...[
-                        DropdownButtonFormField<Country>(
-                          value: _selectedCountry,
-                          isExpanded: true,
-                          style: AppTextStyles.heroBody,
-                          decoration: InputDecoration(
-                            labelText: 'Country',
-                            labelStyle: AppTextStyles.heroBody,
-                          ),
-                          dropdownColor: AppColors.backgroundGradient.first
-                              .withOpacity(0.95),
-                          items: kCountries.map((c) {
-                            return DropdownMenuItem(
-                              value: c,
-                              child: Text(
-                                '${c.flag} ${c.name} (${c.dialCode})',
-                                overflow: TextOverflow.ellipsis,
-                                style: AppTextStyles.heroBody,
+                        // Country selector (custom anchored popup)
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              _countryMenuOpen
+                                  ? 'Scroll to select country'
+                                  : 'Country',
+                              style: AppTextStyles.heroBody,
+                            ),
+                            const SizedBox(height: 6),
+                            InkWell(
+                              key: _countryFieldKey,
+                              borderRadius: BorderRadius.circular(8),
+                              onTap: () async {
+                                // open anchored menu right under the field
+                                setState(() => _countryMenuOpen = true);
+
+                                final box =
+                                    _countryFieldKey.currentContext!
+                                            .findRenderObject()
+                                        as RenderBox;
+                                final overlay =
+                                    Overlay.of(
+                                          context,
+                                        ).context.findRenderObject()
+                                        as RenderBox;
+
+                                final fieldTopLeft = box.localToGlobal(
+                                  Offset.zero,
+                                  ancestor: overlay,
+                                );
+                                final fieldBottomRight = box.localToGlobal(
+                                  box.size.bottomRight(Offset.zero),
+                                  ancestor: overlay,
+                                );
+
+                                final RelativeRect position =
+                                    RelativeRect.fromRect(
+                                      Rect.fromPoints(
+                                        Offset(
+                                          fieldTopLeft.dx,
+                                          fieldBottomRight.dy + 6,
+                                        ), // a bit below the field
+                                        Offset(
+                                          fieldBottomRight.dx,
+                                          fieldBottomRight.dy + 6,
+                                        ),
+                                      ),
+                                      Offset.zero & overlay.size,
+                                    );
+
+                                final selected = await showMenu<Country>(
+                                  context: context,
+                                  position: position,
+                                  color: AppColors.backgroundGradient.first
+                                      .withOpacity(0.96),
+                                  elevation: 8,
+                                  constraints: BoxConstraints(
+                                    minWidth: box.size.width,
+                                    maxWidth: box.size.width,
+                                    maxHeight: 320,
+                                  ),
+                                  items: kCountries.map((c) {
+                                    return PopupMenuItem<Country>(
+                                      value: c,
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Flexible(
+                                            child: Text(
+                                              '${c.flag} ${c.name} (${c.dialCode})',
+                                              overflow: TextOverflow.ellipsis,
+                                              style: AppTextStyles.heroBody,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                  }).toList(),
+                                );
+
+                                setState(() => _countryMenuOpen = false);
+
+                                if (selected != null) {
+                                  setState(() => _selectedCountry = selected);
+                                  // refocus number field and move cursor to end
+                                  FocusScope.of(
+                                    context,
+                                  ).requestFocus(_numberFocus);
+                                  _nationalNumberCtrl
+                                      .selection = TextSelection.fromPosition(
+                                    TextPosition(
+                                      offset: _nationalNumberCtrl.text.length,
+                                    ),
+                                  );
+                                }
+                              },
+                              child: InputDecorator(
+                                decoration: InputDecoration(
+                                  enabledBorder: underlineWhite,
+                                  focusedBorder: underlineWhite,
+                                  isDense: true,
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    vertical: 12,
+                                  ),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Flexible(
+                                      child: Text(
+                                        '${_selectedCountry?.flag ?? ''} ${_selectedCountry?.name ?? ''} (${_selectedCountry?.dialCode ?? ''})',
+                                        overflow: TextOverflow.ellipsis,
+                                        style: AppTextStyles.heroBody,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Icon(
+                                      Icons.expand_more,
+                                      size: 24, // slightly bigger as requested
+                                      color:
+                                          AppTextStyles.heroBody.color
+                                              ?.withOpacity(0.9) ??
+                                          Colors.white70,
+                                    ),
+                                  ],
+                                ),
                               ),
-                            );
-                          }).toList(),
-                          onChanged: (c) =>
-                              setState(() => _selectedCountry = c),
-                          iconEnabledColor: AppTextStyles.heroBody.color
-                              ?.withOpacity(0.85),
+                            ),
+                          ],
                         ),
                         const SizedBox(height: 12),
 
@@ -233,20 +350,14 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                           controller: _nationalNumberCtrl,
                           style: AppTextStyles.heroBody,
                           keyboardType: TextInputType.phone,
+                          cursorColor: Colors.white,
+                          cursorWidth: 1.5,
                           inputFormatters: [
                             FilteringTextInputFormatter.digitsOnly,
                           ],
                           decoration: InputDecoration(
                             labelText: 'Number',
                             labelStyle: AppTextStyles.heroBody,
-                            hintStyle: AppTextStyles.heroBody.copyWith(
-                              color: AppTextStyles.heroBody.color?.withOpacity(
-                                0.7,
-                              ),
-                            ),
-                            hintText: _selectedCountry?.isoCode == 'US'
-                                ? '5551234567'
-                                : '912345678',
                             prefix: Padding(
                               padding: const EdgeInsets.only(right: 8),
                               child: Text(
@@ -260,6 +371,8 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                             contentPadding: const EdgeInsets.symmetric(
                               vertical: 12,
                             ),
+                            enabledBorder: underlineWhite,
+                            focusedBorder: underlineWhite,
                           ),
                         ),
                         const SizedBox(height: 20),
@@ -303,7 +416,14 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                                 shadows: const [],
                               ),
                             ),
-                            onPressed: _sending ? null : () => _sendCode(),
+                            onPressed:
+                                (_sending ||
+                                    _digitsOnly(
+                                          _nationalNumberCtrl.text,
+                                        ).length <
+                                        3)
+                                ? null
+                                : () => _sendCode(),
                             child: const Text('Get Verification Code'),
                           ),
                         ),
@@ -312,6 +432,8 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                           controller: _codeCtrl,
                           style: AppTextStyles.heroBody,
                           keyboardType: TextInputType.number,
+                          cursorColor: Colors.white,
+                          cursorWidth: 1.5,
                           decoration: InputDecoration(
                             labelText: 'SMS code',
                             labelStyle: AppTextStyles.heroBody,
