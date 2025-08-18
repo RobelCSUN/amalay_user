@@ -26,10 +26,10 @@ class AppleSignInFullWidthButton extends StatelessWidget {
           onPressed: onPressed,
           iconColor: Colors.white,
           backgroundColor: Colors.transparent,
-          borderColor: Colors.white.withOpacity(0.5),
+          borderColor: Colors.white.withValues(alpha: 0.5),
           borderWidth: 2,
-          splashColor: Colors.white.withOpacity(0.2),
-          highlightColor: Colors.white.withOpacity(0.08),
+          splashColor: Colors.white.withValues(alpha: 0.2),
+          highlightColor: Colors.white.withValues(alpha: 0.08),
         ),
       ),
     );
