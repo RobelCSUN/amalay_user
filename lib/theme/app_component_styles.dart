@@ -50,6 +50,24 @@ class AppComponentStyles {
     ],
   );
 
+  static const BoxDecoration authTopTextBackdrop = BoxDecoration(
+    gradient: LinearGradient(
+      begin: Alignment.topCenter,
+      end: Alignment.bottomCenter,
+      colors: [Color(0x5C000000), Color(0x12000000)],
+    ),
+    borderRadius: BorderRadius.all(Radius.circular(18)),
+  );
+
+  static const BoxDecoration authCtaBackdrop = BoxDecoration(
+    gradient: LinearGradient(
+      begin: Alignment.topCenter,
+      end: Alignment.bottomCenter,
+      colors: [Color(0x4D000000), Color(0x14000000)],
+    ),
+    borderRadius: BorderRadius.all(Radius.circular(16)),
+  );
+
   static const SweepGradient googleMarkGradient = SweepGradient(
     center: Alignment.center,
     startAngle: 0.0,

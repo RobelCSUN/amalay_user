@@ -20,18 +20,6 @@ class ThemedBackground extends StatelessWidget {
         ? 'assets/images/habesha_couple_hero.jpg'
         : 'assets/images/habesha_couple_login.jpg';
 
-    final overlayColors = useHeroImage
-        ? [
-            const Color(0x332A1A1A),
-            const Color(0x55764639),
-            Colors.black.withValues(alpha: isCreateMode ? 0.48 : 0.54),
-          ]
-        : [
-            const Color(0x222A1A1A),
-            const Color(0x44764639),
-            const Color(0x66411F1C),
-          ];
-
     return Stack(
       fit: StackFit.expand,
       children: [
@@ -96,18 +84,46 @@ class ThemedBackground extends StatelessWidget {
               ),
             ),
           ),
-        IgnorePointer(
-          child: DecoratedBox(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                stops: const [0.00, 0.62, 1.00],
-                colors: overlayColors,
+        if (useHeroImage) ...[
+          // Top contrast scrim for title readability.
+          const IgnorePointer(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  stops: [0.0, 0.34, 1.0],
+                  colors: [AppColors.heroTopScrim, Color(0x00000000), Color(0x00000000)],
+                ),
               ),
             ),
           ),
-        ),
+          // Bottom contrast scrim for CTA/buttons/legal readability.
+          const IgnorePointer(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  stops: [0.0, 0.58, 1.0],
+                  colors: [Color(0x00000000), AppColors.heroMidScrim, AppColors.heroBottomScrim],
+                ),
+              ),
+            ),
+          ),
+        ] else
+          const IgnorePointer(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  stops: [0.00, 0.62, 1.00],
+                  colors: [Color(0x222A1A1A), Color(0x44764639), Color(0x66411F1C)],
+                ),
+              ),
+            ),
+          ),
         child,
       ],
     );

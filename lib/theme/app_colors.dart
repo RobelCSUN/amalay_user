@@ -39,4 +39,8 @@ class AppColors {
   static const Color brandGoldSoft = Color(0xFFF5D7BA);
   static const Color brandGoldDeep = Color(0xFFD9A47D);
   static const Color directiveCue = Color(0xFFEFD3BF);
+
+  static const Color heroTopScrim = Color(0x5C1A0D0B);
+  static const Color heroBottomScrim = Color(0x8A130A09);
+  static const Color heroMidScrim = Color(0x3A3B1F1A);
 }

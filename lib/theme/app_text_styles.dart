@@ -67,24 +67,26 @@ class AppTextStyles {
   );
 
   static const TextStyle authBrand = TextStyle(
-    fontSize: 66,
+    fontSize: 64,
     fontWeight: FontWeight.w700,
     color: Colors.white,
-    letterSpacing: 0.8,
+    letterSpacing: 0.6,
+    fontFamily: 'Georgia',
     shadows: AppComponentStyles.heroTextShadows,
   );
 
   static const TextStyle authSubtitle = TextStyle(
-    fontSize: 22,
-    color: Color(0xF5FFFFFF),
+    fontSize: 21,
+    color: Color(0xF2FFFFFF),
+    height: 1.25,
     shadows: AppComponentStyles.subtitleTextShadows,
   );
 
-  static const TextStyle authContinue = TextStyle(
-    fontSize: 18.2,
-    fontWeight: FontWeight.w700,
+  static const TextStyle authPrimaryCta = TextStyle(
+    fontSize: 18,
+    fontWeight: FontWeight.w800,
     color: AppColors.directiveCue,
-    letterSpacing: 1.1,
+    letterSpacing: 0.7,
     shadows: AppComponentStyles.legalTextShadows,
   );
 
