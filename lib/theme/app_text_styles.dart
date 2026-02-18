@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:amalay_user/theme/app_colors.dart';
+import 'package:amalay_user/theme/app_component_styles.dart';
 
 class AppTextStyles {
   // Crisp & vibrant universal style base
@@ -62,5 +64,47 @@ class AppTextStyles {
     fontSize: 22,
     fontWeight: FontWeight.w700,
     letterSpacing: 0.5,
+  );
+
+  static const TextStyle authBrand = TextStyle(
+    fontSize: 66,
+    fontWeight: FontWeight.w700,
+    color: Colors.white,
+    letterSpacing: 0.8,
+    shadows: AppComponentStyles.heroTextShadows,
+  );
+
+  static const TextStyle authSubtitle = TextStyle(
+    fontSize: 22,
+    color: Color(0xF5FFFFFF),
+    shadows: AppComponentStyles.subtitleTextShadows,
+  );
+
+  static const TextStyle authContinue = TextStyle(
+    fontSize: 18.2,
+    fontWeight: FontWeight.w700,
+    color: AppColors.directiveCue,
+    letterSpacing: 1.1,
+    shadows: AppComponentStyles.legalTextShadows,
+  );
+
+  static const TextStyle authLegalBody = TextStyle(
+    color: AppColors.legalText,
+    fontSize: 15,
+    shadows: AppComponentStyles.legalTextShadows,
+  );
+
+  static const TextStyle authLegalLink = TextStyle(
+    color: Colors.white,
+    fontSize: 15,
+    fontWeight: FontWeight.w700,
+    decoration: TextDecoration.underline,
+    decorationColor: Colors.white,
+  );
+
+  static const TextStyle googleGlyph = TextStyle(
+    fontSize: 38,
+    fontWeight: FontWeight.w700,
+    color: Colors.white,
   );
 }

@@ -22,14 +22,14 @@ class ThemedBackground extends StatelessWidget {
 
     final overlayColors = useHeroImage
         ? [
-            Colors.blueGrey.withValues(alpha: 0.02),
-            Colors.blueGrey.withValues(alpha: 0.22),
-            Colors.black.withValues(alpha: isCreateMode ? 0.52 : 0.58),
+            const Color(0x332A1A1A),
+            const Color(0x55764639),
+            Colors.black.withValues(alpha: isCreateMode ? 0.48 : 0.54),
           ]
         : [
-            Colors.blueGrey.withValues(alpha: 0.06),
-            Colors.blueGrey.withValues(alpha: 0.20),
-            Colors.blueGrey.withValues(alpha: 0.34),
+            const Color(0x222A1A1A),
+            const Color(0x44764639),
+            const Color(0x66411F1C),
           ];
 
     return Stack(

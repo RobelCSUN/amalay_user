@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:amalay_user/widgets/themed_background.dart';
+import 'package:amalay_user/widgets/themed_panel.dart';
 
 class CookiePolicyScreen extends StatelessWidget {
   const CookiePolicyScreen({super.key});
@@ -16,15 +17,7 @@ class CookiePolicyScreen extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
             child: DefaultTextStyle(
               style: theme.textTheme.bodyMedium!,
-              child: Container(
-                padding: const EdgeInsets.fromLTRB(16, 12, 16, 18),
-                decoration: BoxDecoration(
-                  color: Colors.black.withValues(alpha: 0.28),
-                  borderRadius: BorderRadius.circular(18),
-                  border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.18),
-                  ),
-                ),
+              child: ThemedPanel(
                 child: const Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [

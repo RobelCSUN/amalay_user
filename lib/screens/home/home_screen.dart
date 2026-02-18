@@ -25,7 +25,6 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  bool _isSignUp = true;
   late final AuthService _authService;
   late final UserRepository _userRepository;
 
@@ -157,6 +156,15 @@ class _HomeScreenState extends State<HomeScreen> {
     await Navigator.pushNamed(context, AppRoutes.phoneAuth);
   }
 
+  Future<void> _handleFacebook() async {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Facebook sign-in will be enabled in the next milestone.'),
+      ),
+    );
+  }
+
   Future<void> _signOut() async {
     if (!mounted) return;
     ScaffoldMessenger.of(context).clearSnackBars();
@@ -205,7 +213,7 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       body: ThemedBackground(
         useHeroImage: true,
-        isCreateMode: _isSignUp,
+        isCreateMode: true,
         child: _buildBody(context),
       ),
     );
@@ -223,11 +231,10 @@ class _HomeScreenState extends State<HomeScreen> {
           width: double.infinity,
           height: constraints.maxHeight,
           child: AuthCard(
-            isSignUp: _isSignUp,
-            onToggleCopy: () => setState(() => _isSignUp = !_isSignUp),
             onGoogle: _handleGoogle,
             onPhone: _openPhoneAuth,
             onApple: _handleApple,
+            onFacebook: _handleFacebook,
             fullHeightLayout: true,
           ),
         ),

@@ -2,22 +2,24 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:amalay_user/app/app_routes.dart';
+import 'package:amalay_user/theme/app_colors.dart';
+import 'package:amalay_user/theme/app_component_styles.dart';
+import 'package:amalay_user/theme/app_layout.dart';
+import 'package:amalay_user/theme/app_text_styles.dart';
 
 class AuthCard extends StatelessWidget {
-  final bool isSignUp;
-  final VoidCallback onToggleCopy;
   final VoidCallback onGoogle;
   final VoidCallback onPhone;
   final VoidCallback onApple;
+  final VoidCallback onFacebook;
   final bool fullHeightLayout;
 
   const AuthCard({
     super.key,
-    required this.isSignUp,
-    required this.onToggleCopy,
     required this.onGoogle,
     required this.onPhone,
     required this.onApple,
+    required this.onFacebook,
     this.fullHeightLayout = false,
   });
 
@@ -32,44 +34,27 @@ class AuthCard extends StatelessWidget {
     return Stack(
       children: [
         Align(
-          alignment: const Alignment(0, -0.76),
+          alignment: const Alignment(0, AppLayout.authHeaderAlignmentY),
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24),
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppLayout.authOuterHorizontalPadding,
+            ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Text(
-                  'Amalay',
-                  style: TextStyle(
-                    fontSize: 66,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white,
-                    shadows: [
-                      Shadow(
-                        color: Color.fromARGB(90, 0, 0, 0),
-                        blurRadius: 1,
-                        offset: Offset(0, 2),
-                      ),
-                    ],
+                ShaderMask(
+                  shaderCallback: (Rect bounds) =>
+                      AppComponentStyles.brandTitleGradient.createShader(bounds),
+                  child: const Text(
+                    'Amalay',
+                    style: AppTextStyles.authBrand,
                   ),
                 ),
-                const SizedBox(height: 8),
-                Text(
-                  isSignUp
-                      ? 'Find someone who feels like home.'
-                      : 'Welcome back. Let\'s continue your story.',
+                const SizedBox(height: AppLayout.brandToSubtitleGap),
+                const Text(
+                  'Find someone who feels like home.',
                   textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 22,
-                    color: Colors.white.withValues(alpha: 0.96),
-                    shadows: const [
-                      Shadow(
-                        color: Color.fromARGB(75, 0, 0, 0),
-                        blurRadius: 0.8,
-                        offset: Offset(0, 1),
-                      ),
-                    ],
-                  ),
+                  style: AppTextStyles.authSubtitle,
                 ),
               ],
             ),
@@ -78,30 +63,66 @@ class AuthCard extends StatelessWidget {
         Align(
           alignment: Alignment.bottomCenter,
           child: Padding(
-            padding: EdgeInsets.fromLTRB(24, 16, 24, bottomInset + 16),
+            padding: EdgeInsets.fromLTRB(
+              AppLayout.authOuterHorizontalPadding,
+              AppLayout.authOuterTopPadding,
+              AppLayout.authOuterHorizontalPadding,
+              bottomInset + AppLayout.authBottomInsetPadding,
+            ),
             child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 430),
+              constraints: const BoxConstraints(maxWidth: AppLayout.authMaxWidth),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  _modeToggleOrb(),
-                  const SizedBox(height: 12),
+                  const Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'Continue with',
+                        style: AppTextStyles.authContinue,
+                      ),
+                      SizedBox(height: AppLayout.continueCueGap),
+                      SizedBox(
+                        height: AppLayout.continueCueStackHeight,
+                        child: Stack(
+                          alignment: Alignment.topCenter,
+                          children: [
+                            Positioned(
+                              top: AppLayout.continueCueTopOffset,
+                              child: Icon(
+                                Icons.keyboard_arrow_down_rounded,
+                                color: AppColors.directiveCue,
+                                size: AppLayout.continueCueIconSize,
+                              ),
+                            ),
+                            Positioned(
+                              top: AppLayout.continueCueMidOffset,
+                              child: Icon(
+                                Icons.keyboard_arrow_down_rounded,
+                                color: AppColors.directiveCue,
+                                size: AppLayout.continueCueMidIconSize,
+                              ),
+                            ),
+                            Positioned(
+                              top: AppLayout.continueCueLowOffset,
+                              child: Icon(
+                                Icons.keyboard_arrow_down_rounded,
+                                color: AppColors.directiveCue,
+                                size: AppLayout.continueCueLowIconSize,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: AppLayout.continueToProvidersGap),
                   _iconOnlySignInRow(),
-                  const SizedBox(height: 18),
+                  const SizedBox(height: AppLayout.providersToLegalGap),
                   Text.rich(
                     TextSpan(
                       text: 'By continuing, you agree to our ',
-                      style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.93),
-                        fontSize: 15,
-                        shadows: const [
-                          Shadow(
-                            color: Color.fromARGB(65, 0, 0, 0),
-                            blurRadius: 0.8,
-                            offset: Offset(0, 1),
-                          ),
-                        ],
-                      ),
+                      style: AppTextStyles.authLegalBody,
                       children: [
                         WidgetSpan(
                           alignment: PlaceholderAlignment.middle,
@@ -149,84 +170,42 @@ class AuthCard extends StatelessWidget {
     );
   }
 
-  Widget _modeToggleOrb() {
-    final label = isSignUp ? 'Sign in' : 'Create';
-    final icon = isSignUp
-        ? Icons.login_rounded
-        : Icons.person_add_alt_1_rounded;
-
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        ClipOval(
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-            child: Material(
-              color: Colors.transparent,
-              child: Ink(
-                width: 54,
-                height: 54,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.black.withValues(alpha: 0.26),
-                  border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.52),
-                  ),
-                  boxShadow: const [
-                    BoxShadow(
-                      color: Color.fromARGB(60, 0, 0, 0),
-                      blurRadius: 10,
-                      offset: Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: InkWell(
-                  customBorder: const CircleBorder(),
-                  onTap: onToggleCopy,
-                  child: Icon(icon, size: 22, color: Colors.white),
-                ),
-              ),
-            ),
-          ),
-        ),
-        const SizedBox(height: 6),
-        Text(
-          label,
-          style: TextStyle(
-            color: Colors.white.withValues(alpha: 0.95),
-            fontSize: 13,
-            fontWeight: FontWeight.w600,
-            shadows: const [
-              Shadow(
-                color: Color.fromARGB(70, 0, 0, 0),
-                blurRadius: 1,
-                offset: Offset(0, 1),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
   Widget _iconOnlySignInRow() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         _iconCircleButton(
-          icon: const Icon(Icons.apple, color: Colors.white, size: 34),
+          icon: const Icon(
+            Icons.apple,
+            color: Colors.white,
+            size: AppLayout.appleIconSize,
+          ),
           onTap: onApple,
           semantics: 'Continue with Apple',
         ),
-        const SizedBox(width: 14),
+        const SizedBox(width: AppLayout.providerGapWide),
         _iconCircleButton(
           icon: _googleMark(),
           onTap: onGoogle,
           semantics: 'Continue with Google',
         ),
-        const SizedBox(width: 14),
+        const SizedBox(width: AppLayout.providerGapTight),
         _iconCircleButton(
-          icon: const Icon(Icons.phone_outlined, color: Colors.white, size: 32),
+          icon: const Icon(
+            Icons.facebook_rounded,
+            color: AppColors.facebookBlue,
+            size: AppLayout.facebookIconSize,
+          ),
+          onTap: onFacebook,
+          semantics: 'Continue with Facebook',
+        ),
+        const SizedBox(width: AppLayout.providerGapTight),
+        _iconCircleButton(
+          icon: const Icon(
+            Icons.phone_outlined,
+            color: Colors.white,
+            size: AppLayout.phoneIconSize,
+          ),
           onTap: onPhone,
           semantics: 'Continue with Phone',
         ),
@@ -243,25 +222,24 @@ class AuthCard extends StatelessWidget {
       button: true,
       label: semantics,
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(40),
+        borderRadius: AppComponentStyles.authProviderBorderRadius,
         child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+          filter: ImageFilter.blur(
+            sigmaX: AppLayout.providerBlur,
+            sigmaY: AppLayout.providerBlur,
+          ),
           child: SizedBox(
-            width: 84,
-            height: 84,
+            width: AppLayout.providerSize,
+            height: AppLayout.providerSize,
             child: Material(
               color: Colors.transparent,
               child: Ink(
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.black.withValues(alpha: 0.30),
-                  border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.45),
-                  ),
-                ),
+                decoration: AppComponentStyles.authProviderDecoration,
                 child: InkWell(
                   customBorder: const CircleBorder(),
                   onTap: onTap,
+                  splashColor: Colors.white.withValues(alpha: 0.20),
+                  highlightColor: Colors.white.withValues(alpha: 0.10),
                   child: Center(child: icon),
                 ),
               ),
@@ -274,25 +252,11 @@ class AuthCard extends StatelessWidget {
 
   Widget _googleMark() {
     return ShaderMask(
-      shaderCallback: (Rect bounds) => const SweepGradient(
-        center: Alignment.center,
-        startAngle: 0.0,
-        endAngle: 6.28318530718,
-        colors: [
-          Color(0xFF4285F4), // blue
-          Color(0xFF34A853), // green
-          Color(0xFFFBBC05), // yellow
-          Color(0xFFEA4335), // red
-          Color(0xFF4285F4), // blue
-        ],
-      ).createShader(bounds),
+      shaderCallback: (Rect bounds) =>
+          AppComponentStyles.googleMarkGradient.createShader(bounds),
       child: const Text(
         'G',
-        style: TextStyle(
-          fontSize: 38,
-          fontWeight: FontWeight.w700,
-          color: Colors.white,
-        ),
+        style: AppTextStyles.googleGlyph,
       ),
     );
   }
@@ -310,13 +274,7 @@ class _LegalLink extends StatelessWidget {
       onTap: onTap,
       child: Text(
         label,
-        style: const TextStyle(
-          color: Colors.white,
-          fontSize: 15,
-          fontWeight: FontWeight.w700,
-          decoration: TextDecoration.underline,
-          decorationColor: Colors.white,
-        ),
+        style: AppTextStyles.authLegalLink,
       ),
     );
   }

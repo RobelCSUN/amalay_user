@@ -4,19 +4,19 @@ import 'package:amalay_user/theme/app_colors.dart';
 
 class AppTheme {
   static ThemeData get light {
-    const textColor = Colors.white;
+    const textColor = AppColors.primaryText;
 
     return ThemeData(
       useMaterial3: true,
       colorScheme: const ColorScheme(
         brightness: Brightness.dark,
-        primary: AppColors.accentWarm,
-        onPrimary: Colors.black,
+        primary: AppColors.buttonFill,
+        onPrimary: AppColors.buttonText,
         secondary: AppColors.accentRose,
-        onSecondary: Colors.white,
+        onSecondary: AppColors.primaryText,
         error: Color(0xFFEF5350),
         onError: Colors.white,
-        surface: Color(0xCC0B2236),
+        surface: AppColors.panelFill,
         onSurface: textColor,
       ),
       scaffoldBackgroundColor: Colors.transparent,
@@ -57,13 +57,30 @@ class AppTheme {
         ),
       ),
       inputDecorationTheme: InputDecorationTheme(
-        labelStyle: const TextStyle(color: Colors.white70),
-        hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.75)),
-        enabledBorder: const UnderlineInputBorder(
-          borderSide: BorderSide(color: Colors.white70, width: 1.2),
+        labelStyle: const TextStyle(color: AppColors.secondaryText),
+        hintStyle: const TextStyle(color: AppColors.secondaryText),
+        filled: true,
+        fillColor: AppColors.panelFill,
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: AppColors.panelBorder, width: 1.0),
         ),
-        focusedBorder: const UnderlineInputBorder(
-          borderSide: BorderSide(color: Colors.white, width: 1.6),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: Colors.white, width: 1.2),
+        ),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: AppColors.panelBorder, width: 1.0),
+        ),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+      ),
+      outlinedButtonTheme: OutlinedButtonThemeData(
+        style: OutlinedButton.styleFrom(
+          foregroundColor: textColor,
+          side: const BorderSide(color: AppColors.buttonOutline, width: 1.2),
+          shape: const StadiumBorder(),
+          textStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
         ),
       ),
       textButtonTheme: TextButtonThemeData(
@@ -78,12 +95,10 @@ class AppTheme {
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           elevation: 0,
-          backgroundColor: Colors.white,
-          foregroundColor: Colors.black,
+          backgroundColor: AppColors.buttonFill,
+          foregroundColor: AppColors.buttonText,
           textStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 17),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
+          shape: const StadiumBorder(),
         ),
       ),
       snackBarTheme: SnackBarThemeData(
