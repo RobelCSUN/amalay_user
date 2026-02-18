@@ -2,12 +2,20 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
+import 'package:amalay_user/app/app_routes.dart';
 import 'package:amalay_user/repositories/user_repository.dart';
 import 'package:amalay_user/services/auth/auth_service.dart';
-import 'package:amalay_user/screens/home/home_screen.dart'; // ⬅️ added for stack reset
+import 'package:amalay_user/widgets/themed_background.dart';
 
 class CreateProfileScreen extends StatefulWidget {
-  const CreateProfileScreen({super.key});
+  final UserRepository userRepository;
+  final AuthService authService;
+
+  const CreateProfileScreen({
+    super.key,
+    required this.userRepository,
+    required this.authService,
+  });
 
   @override
   State<CreateProfileScreen> createState() => _CreateProfileScreenState();
@@ -15,8 +23,8 @@ class CreateProfileScreen extends StatefulWidget {
 
 class _CreateProfileScreenState extends State<CreateProfileScreen> {
   final _nameCtrl = TextEditingController();
-  final _repo = UserRepository();
-  final _authService = AuthService();
+  late final UserRepository _repo;
+  late final AuthService _authService;
 
   bool _saving = false;
 
@@ -24,6 +32,13 @@ class _CreateProfileScreenState extends State<CreateProfileScreen> {
   void dispose() {
     _nameCtrl.dispose();
     super.dispose();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _repo = widget.userRepository;
+    _authService = widget.authService;
   }
 
   Future<void> _save() async {
@@ -68,11 +83,9 @@ class _CreateProfileScreenState extends State<CreateProfileScreen> {
       await _authService.signOut();
 
       if (!mounted) return;
-      // Hard reset back to HomeScreen so the auth listener shows the login UI
-      Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (_) => const HomeScreen()),
-        (route) => false,
-      );
+      Navigator.of(
+        context,
+      ).pushNamedAndRemoveUntil(AppRoutes.home, (route) => false);
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(
@@ -83,55 +96,65 @@ class _CreateProfileScreenState extends State<CreateProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Create Profile'),
-        actions: [
-          TextButton(
-            onPressed: _saving ? null : _signOut,
-            child: const Text('Sign out'),
-          ),
-        ],
-      ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            children: [
-              const SizedBox(height: 8),
-              const Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  'Just your display name for now.',
-                  style: TextStyle(fontSize: 14),
-                ),
+    return ThemedBackground(
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        appBar: AppBar(
+          title: const Text('Create Profile'),
+          actions: [
+            TextButton(
+              onPressed: _saving ? null : _signOut,
+              child: const Text('Sign out'),
+            ),
+          ],
+        ),
+        body: SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(20),
+            child: Container(
+              padding: const EdgeInsets.fromLTRB(16, 14, 16, 18),
+              decoration: BoxDecoration(
+                color: Colors.black.withValues(alpha: 0.28),
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.18)),
               ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: _nameCtrl,
-                textInputAction: TextInputAction.done,
-                onSubmitted: (_) => _saving ? null : _save(),
-                decoration: const InputDecoration(
-                  labelText: 'Display name',
-                  border: OutlineInputBorder(),
-                ),
+              child: Column(
+                children: [
+                  const SizedBox(height: 8),
+                  const Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      'Just your display name for now.',
+                      style: TextStyle(fontSize: 14),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: _nameCtrl,
+                    textInputAction: TextInputAction.done,
+                    onSubmitted: (_) => _saving ? null : _save(),
+                    decoration: const InputDecoration(
+                      labelText: 'Display name',
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 48,
+                    child: ElevatedButton(
+                      onPressed: _saving ? null : _save,
+                      child: _saving
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Text('Save & Continue'),
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(height: 16),
-              SizedBox(
-                width: double.infinity,
-                height: 48,
-                child: ElevatedButton(
-                  onPressed: _saving ? null : _save,
-                  child: _saving
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Text('Save & Continue'),
-                ),
-              ),
-            ],
+            ),
           ),
         ),
       ),

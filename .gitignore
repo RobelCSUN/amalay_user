@@ -1,96 +1,64 @@
-# -------------------------------
-# Miscellaneous
-# -------------------------------
-*.class
-*.log
-*.pyc
-*.swp
-*.swo
+# OS / temp
 .DS_Store
-.packages
+*.log
 *.tmp
 *.temp
 *.orig
+*.swp
+*.swo
 
-# Directories to ignore
-.atom/
-.build/
-.buildlog/
-.history
-.svn/
-.swiftpm/
-migrate_working_dir/
-
-# -------------------------------
-# IDE related
-# -------------------------------
-
-# IntelliJ / Android Studio
+# IDE
+.idea/
 *.iml
 *.ipr
 *.iws
-.idea/
-
-# VS Code (optional)
 .vscode/
 
-# -------------------------------
-# Flutter / Dart / Pub
-# -------------------------------
+# Dart / Flutter
 .dart_tool/
 .flutter-plugins
 .flutter-plugins-dependencies
 .packages
-.pub-cache/
 .pub/
-/build/
+.pub-cache/
+build/
 **/build/
-
-# Flutter API Docs
 **/doc/api/
 
-# iOS-specific Flutter
-**/ios/Flutter/.last_build_id
-
-# -------------------------------
-# iOS-specific
-# -------------------------------
+# iOS / Xcode generated artifacts
 ios/.symlinks/
 ios/Flutter/App.framework
 ios/Flutter/Flutter.framework
 ios/Flutter/Flutter.podspec
 ios/Flutter/Generated.xcconfig
+ios/Flutter/flutter_export_environment.sh
+ios/Flutter/ephemeral/
 ios/ServiceDefinitions.json
-Runner.xcworkspace/
-Pods/
-Pods 2/
-Podfile.lock
-
-# Xcode files
-xcuserdata/
+ios/Pods/
+macos/Pods/
+macos/.symlinks/
+macos/Flutter/ephemeral/
 DerivedData/
-*.xcuserstate
-*.xcworkspace
-*.xcodeproj/project.xcworkspace/
-*.xcodeproj/xcuserdata/
-*.xcscmblueprint
+**/xcuserdata/
+**/*.xcuserstate
+**/*.xcscmblueprint
 
-# -------------------------------
-# Android-specific
-# -------------------------------
-/android/.gradle/
-/android/.idea/
-/android/local.properties
-/android/app/*.keystore
+# Accidental duplicate lockfiles from Finder/editor copies
+ios/Podfile\ *.lock
 
-# Android build output
-/android/app/build/
+# Android generated artifacts
+android/.gradle/
+android/.idea/
+android/local.properties
+android/app/build/
 android/build/
 .gradle/
-build/
 
-# -------------------------------
-# Symbolication & Obfuscation
-# -------------------------------
+# Secrets / signing files
+android/key.properties
+**/*.keystore
+**/*.jks
+
+# Mapping / symbols
 app.*.symbols
 app.*.map.json

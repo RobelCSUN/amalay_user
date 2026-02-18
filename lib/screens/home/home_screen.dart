@@ -1,42 +1,113 @@
-// lib/screens/home/home_screen.dart
-import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'dart:async';
 
-import 'package:amalay_user/services/auth/auth_service.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
+
+import 'package:amalay_user/app/app_routes.dart';
 import 'package:amalay_user/repositories/user_repository.dart';
-import 'package:amalay_user/services/auth/phone_auth_screen.dart';
-import 'package:amalay_user/widgets/signed_in_card.dart';
+import 'package:amalay_user/services/auth/auth_service.dart';
 import 'package:amalay_user/widgets/auth_card.dart';
-import 'package:amalay_user/onboarding/create_profile_screen.dart';
-import 'package:amalay_user/theme/app_colors.dart';
+import 'package:amalay_user/widgets/signed_in_card.dart';
+import 'package:amalay_user/widgets/themed_background.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+  final AuthService authService;
+  final UserRepository userRepository;
+
+  const HomeScreen({
+    super.key,
+    required this.authService,
+    required this.userRepository,
+  });
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  bool _isSignUp = false; // copy-only toggle
+  bool _isSignUp = true;
   late final AuthService _authService;
-  bool _pushedProfileFlow = false; // avoid double navigation into profile
-  bool _profileCompleteOverride =
-      false; // NEW: short-circuit after profile save
+  late final UserRepository _userRepository;
+
+  StreamSubscription<User?>? _authSub;
+  User? _currentUser;
+  bool _isResolvingSession = true;
+  bool _isProfileComplete = false;
+  bool _isProfileFlowActive = false;
 
   @override
   void initState() {
     super.initState();
-    _authService = AuthService();
+    _authService = widget.authService;
+    _userRepository = widget.userRepository;
+
+    _authSub = _authService.authStateChanges.listen(_onAuthStateChanged);
+  }
+
+  @override
+  void dispose() {
+    _authSub?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _onAuthStateChanged(User? user) async {
+    if (!mounted) return;
+
+    if (user == null) {
+      setState(() {
+        _currentUser = null;
+        _isResolvingSession = false;
+        _isProfileComplete = false;
+        _isProfileFlowActive = false;
+      });
+      return;
+    }
+
+    setState(() {
+      _currentUser = user;
+      _isResolvingSession = true;
+      _isProfileComplete = false;
+    });
+
+    try {
+      // Keep user document lifecycle consistent regardless of auth provider.
+      await _userRepository.ensureUserDoc(user);
+      await _userRepository.touchLogin(user.uid);
+      final profileComplete = await _userRepository.isProfileComplete(user.uid);
+
+      if (!mounted) return;
+      if (_currentUser?.uid != user.uid) return;
+
+      setState(() {
+        _isProfileComplete = profileComplete;
+        _isResolvingSession = false;
+      });
+
+      if (!profileComplete) {
+        await _startProfileFlowIfNeeded();
+      }
+    } catch (e) {
+      debugPrint('[HomeScreen] Session bootstrap failed: $e');
+      if (!mounted) return;
+      setState(() {
+        _isResolvingSession = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Could not load your account. Retry.')),
+      );
+    }
   }
 
   Future<void> _handleGoogle() async {
     if (mounted) ScaffoldMessenger.of(context).clearSnackBars();
 
-    // 1) Auth only
     try {
       debugPrint('[Auth] Google sign-in: start');
-      await _authService.signInWithGoogle();
+      final credential = await _authService.signInWithGoogle();
+      final hasActiveUser = FirebaseAuth.instance.currentUser != null;
+      if (credential == null && !hasActiveUser) {
+        return; // user canceled
+      }
       debugPrint('[Auth] Google sign-in: success');
     } on FirebaseAuthException catch (e) {
       if (e.code == 'canceled') return;
@@ -45,25 +116,12 @@ class _HomeScreenState extends State<HomeScreen> {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text('Google sign-in failed')));
-      return;
     } catch (e) {
       debugPrint('[Auth] Google sign-in ERROR: $e');
       if (!mounted) return;
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text('Google sign-in failed')));
-      return;
-    }
-
-    // 2) Firestore best-effort
-    try {
-      final user = FirebaseAuth.instance.currentUser;
-      if (user == null) return;
-      final repo = UserRepository();
-      await repo.ensureUserDoc(user);
-      await repo.touchLogin(user.uid);
-    } catch (e) {
-      debugPrint('[Repo] ensure/touch failed (ignored): $e');
     }
   }
 
@@ -72,7 +130,11 @@ class _HomeScreenState extends State<HomeScreen> {
 
     try {
       debugPrint('[Auth] Apple sign-in: start');
-      await _authService.signInWithApple();
+      final credential = await _authService.signInWithApple();
+      final hasActiveUser = FirebaseAuth.instance.currentUser != null;
+      if (credential == null && !hasActiveUser) {
+        return;
+      }
       debugPrint('[Auth] Apple sign-in: success');
     } on FirebaseAuthException catch (e) {
       if (e.code == 'canceled') return;
@@ -81,163 +143,132 @@ class _HomeScreenState extends State<HomeScreen> {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text('Apple sign-in failed')));
-      return;
     } catch (e) {
       debugPrint('[Auth] Apple sign-in ERROR: $e');
       if (!mounted) return;
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text('Apple sign-in failed')));
-      return;
-    }
-
-    // Firestore best-effort
-    try {
-      final user = FirebaseAuth.instance.currentUser;
-      if (user == null) return;
-      final repo = UserRepository();
-      await repo.ensureUserDoc(user);
-      await repo.touchLogin(user.uid);
-    } catch (e) {
-      debugPrint('[Repo] ensure/touch failed (ignored): $e');
     }
   }
 
   Future<void> _openPhoneAuth() async {
     if (mounted) ScaffoldMessenger.of(context).clearSnackBars();
-    await Navigator.push<bool>(
-      context,
-      MaterialPageRoute(builder: (_) => const PhoneAuthScreen()),
-    );
+    await Navigator.pushNamed(context, AppRoutes.phoneAuth);
   }
 
   Future<void> _signOut() async {
     if (!mounted) return;
     ScaffoldMessenger.of(context).clearSnackBars();
     try {
-      debugPrint('[Auth] signOut: start');
       await _authService.signOut();
-      debugPrint('[Auth] signOut: done');
-    } finally {
+    } catch (e) {
+      debugPrint('[Auth] signOut ERROR: $e');
       if (!mounted) return;
-      ScaffoldMessenger.of(context).clearSnackBars();
-      _pushedProfileFlow = false; // reset guards
-      _profileCompleteOverride = false; // reset override
-      setState(() {});
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Sign out failed')));
     }
+  }
+
+  Future<void> _startProfileFlowIfNeeded() async {
+    if (!mounted || _isProfileFlowActive || _currentUser == null) return;
+
+    _isProfileFlowActive = true;
+
+    final result = await Navigator.of(
+      context,
+    ).pushNamed<bool>(AppRoutes.createProfile);
+
+    _isProfileFlowActive = false;
+
+    if (!mounted) return;
+    final user = _currentUser;
+    if (user == null) return;
+
+    if (result == true) {
+      setState(() {
+        _isProfileComplete = true;
+      });
+      return;
+    }
+
+    final profileComplete = await _userRepository.isProfileComplete(user.uid);
+    if (!mounted) return;
+    setState(() {
+      _isProfileComplete = profileComplete;
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        width: double.infinity,
-        height: double.infinity,
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: AppColors.backgroundGradient,
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
+      body: ThemedBackground(
+        useHeroImage: true,
+        isCreateMode: _isSignUp,
+        child: _buildBody(context),
+      ),
+    );
+  }
+
+  Widget _buildBody(BuildContext context) {
+    if (_isResolvingSession) {
+      return const SafeArea(child: Center(child: CircularProgressIndicator()));
+    }
+
+    final user = _currentUser;
+    if (user == null) {
+      return LayoutBuilder(
+        builder: (context, constraints) => SizedBox(
+          width: double.infinity,
+          height: constraints.maxHeight,
+          child: AuthCard(
+            isSignUp: _isSignUp,
+            onToggleCopy: () => setState(() => _isSignUp = !_isSignUp),
+            onGoogle: _handleGoogle,
+            onPhone: _openPhoneAuth,
+            onApple: _handleApple,
+            fullHeightLayout: true,
           ),
         ),
-        child: SafeArea(
-          child: StreamBuilder<User?>(
-            stream: _authService.authStateChanges,
-            builder: (context, snap) {
-              final user = snap.data;
+      );
+    }
 
-              // Signed out -> show auth buttons
-              if (user == null) {
-                WidgetsBinding.instance.addPostFrameCallback((_) {
-                  if (mounted) ScaffoldMessenger.of(context).clearSnackBars();
-                });
-
-                return Column(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  children: [
-                    SizedBox(height: MediaQuery.of(context).size.height * 0.52),
-                    Center(
-                      child: AuthCard(
-                        isSignUp: _isSignUp,
-                        onToggleCopy: () =>
-                            setState(() => _isSignUp = !_isSignUp),
-                        onGoogle: () {
-                          _handleGoogle();
-                        },
-                        onPhone: () {
-                          _openPhoneAuth();
-                        },
-                        onApple: () {
-                          _handleApple();
-                        },
-                      ),
-                    ),
-                  ],
-                );
-              }
-
-              // 🔥 Short-circuit immediately if we *just* finished profile flow.
-              // This avoids a one-frame FutureBuilder flicker.
-              if (_profileCompleteOverride) {
-                WidgetsBinding.instance.addPostFrameCallback((_) {
-                  if (mounted) ScaffoldMessenger.of(context).clearSnackBars();
-                });
-                return Center(
-                  child: SignedInCard(user: user, onSignOut: _signOut),
-                );
-              }
-
-              // Signed in -> decide based on Firestore profile completeness
-              return FutureBuilder<bool>(
-                future: UserRepository().isProfileComplete(user.uid),
-                builder: (context, snap2) {
-                  if (snap2.connectionState == ConnectionState.waiting) {
-                    return const Center(child: CircularProgressIndicator());
-                  }
-
-                  final complete = snap2.data == true;
-
-                  if (complete) {
-                    WidgetsBinding.instance.addPostFrameCallback((_) {
-                      if (mounted) {
-                        ScaffoldMessenger.of(context).clearSnackBars();
-                      }
-                    });
-                    return Center(
-                      child: SignedInCard(user: user, onSignOut: _signOut),
-                    );
-                  }
-
-                  // Not complete → push profile flow once, then set override on success
-                  if (!_pushedProfileFlow) {
-                    _pushedProfileFlow = true;
-                    WidgetsBinding.instance.addPostFrameCallback((_) async {
-                      if (!mounted) return;
-                      final result = await Navigator.of(context).push<bool>(
-                        MaterialPageRoute(
-                          builder: (_) => const CreateProfileScreen(),
-                        ),
-                      );
-                      if (!mounted) return;
-
-                      if (result == true) {
-                        // We just completed profile → show card next build immediately.
-                        setState(() {
-                          _profileCompleteOverride = true;
-                        });
-                      } else {
-                        // User backed out; allow trying again.
-                        _pushedProfileFlow = false;
-                      }
-                    });
-                  }
-
-                  return const SizedBox.shrink();
-                },
-              );
-            },
+    if (!_isProfileComplete) {
+      return SafeArea(
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 420),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const CircularProgressIndicator(),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'Preparing your profile...',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(color: Colors.white),
+                  ),
+                  const SizedBox(height: 12),
+                  TextButton(
+                    onPressed: _isProfileFlowActive
+                        ? null
+                        : _startProfileFlowIfNeeded,
+                    child: const Text('Continue'),
+                  ),
+                ],
+              ),
+            ),
           ),
         ),
+      );
+    }
+
+    return SafeArea(
+      child: Center(
+        child: SignedInCard(user: user, onSignOut: _signOut),
       ),
     );
   }

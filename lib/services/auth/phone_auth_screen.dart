@@ -1,6 +1,5 @@
 // lib/screens/auth/phone_auth_screen.dart
 import 'dart:ui' as ui;
-import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -9,6 +8,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:amalay_user/theme/app_colors.dart';
 import 'package:amalay_user/data/countries_area_code.dart';
 import 'package:amalay_user/theme/app_text_styles.dart';
+import 'package:amalay_user/widgets/themed_background.dart';
 
 class PhoneAuthScreen extends StatefulWidget {
   const PhoneAuthScreen({super.key});
@@ -157,20 +157,11 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
       borderSide: BorderSide(color: Colors.white70, width: 1.2),
     );
 
-    return Container(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          colors: AppColors.backgroundGradient,
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-      ),
+    return ThemedBackground(
       child: Scaffold(
         backgroundColor: Colors.transparent,
         extendBodyBehindAppBar: true,
         appBar: AppBar(
-          backgroundColor: Colors.transparent,
-          elevation: 0,
           iconTheme: const IconThemeData(color: Colors.white),
           title: Text(
             'Phone Sign-In',
@@ -267,7 +258,7 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                                   context: context,
                                   position: position,
                                   color: AppColors.backgroundGradient.first
-                                      .withOpacity(0.96),
+                                      .withValues(alpha: 0.96),
                                   elevation: 8,
                                   constraints: BoxConstraints(
                                     minWidth: box.size.width,
@@ -294,13 +285,12 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                                 );
 
                                 setState(() => _countryMenuOpen = false);
+                                if (!mounted) return;
 
                                 if (selected != null) {
                                   setState(() => _selectedCountry = selected);
                                   // refocus number field and move cursor to end
-                                  FocusScope.of(
-                                    context,
-                                  ).requestFocus(_numberFocus);
+                                  _numberFocus.requestFocus();
                                   _nationalNumberCtrl
                                       .selection = TextSelection.fromPosition(
                                     TextPosition(
@@ -334,7 +324,7 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                                       size: 24, // slightly bigger as requested
                                       color:
                                           AppTextStyles.heroBody.color
-                                              ?.withOpacity(0.9) ??
+                                              ?.withValues(alpha: 0.9) ??
                                           Colors.white70,
                                     ),
                                   ],
@@ -383,8 +373,8 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                             Icon(
                               Icons.privacy_tip,
                               size: 18,
-                              color: AppTextStyles.heroBody.color?.withOpacity(
-                                0.9,
+                              color: AppTextStyles.heroBody.color?.withValues(
+                                alpha: 0.9,
                               ),
                             ),
                             const SizedBox(width: 6),
@@ -438,8 +428,8 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                             labelText: 'SMS code',
                             labelStyle: AppTextStyles.heroBody,
                             hintStyle: AppTextStyles.heroBody.copyWith(
-                              color: AppTextStyles.heroBody.color?.withOpacity(
-                                0.7,
+                              color: AppTextStyles.heroBody.color?.withValues(
+                                alpha: 0.7,
                               ),
                             ),
                           ),

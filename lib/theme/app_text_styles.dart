@@ -24,14 +24,14 @@ class AppTextStyles {
   static final TextStyle heroBody = _crispBase.copyWith(
     fontSize: 15,
     fontWeight: FontWeight.w400,
-    color: Colors.white.withOpacity(0.85),
+    color: Colors.white.withValues(alpha: 0.85),
   );
 
   // Separator (like the 'or' text, brighter for contrast)
   static final TextStyle separator = _crispBase.copyWith(
     fontSize: 16,
     fontWeight: FontWeight.w500,
-    color: Colors.white.withOpacity(0.9),
+    color: Colors.white.withValues(alpha: 0.9),
   );
 
   // Link (high-contrast underlined)

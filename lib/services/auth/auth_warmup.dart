@@ -24,7 +24,7 @@ class AuthWarmup {
 
     // Don’t block startup forever—cap total time
     await Future.any([
-      Future.wait(tasks).catchError((_) {}),
+      Future.wait(tasks).catchError((_) => <dynamic>[]),
       Future.delayed(timeout),
     ]);
   }

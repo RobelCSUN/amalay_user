@@ -26,7 +26,7 @@ class UserRepository {
 
   /// Marks the user profile as complete with optional display name.
   Future<void> markProfileComplete(String uid, {String? displayName}) async {
-    final updateData = {
+    final updateData = <String, dynamic>{
       'profileComplete': true,
       'updatedAt': FieldValue.serverTimestamp(),
     };
@@ -34,7 +34,10 @@ class UserRepository {
       updateData['displayName'] = displayName.trim();
     }
 
-    await _firestore.collection(usersCollection).doc(uid).update(updateData);
+    await _firestore
+        .collection(usersCollection)
+        .doc(uid)
+        .set(updateData, SetOptions(merge: true));
   }
 
   /// Checks if the user's profile is complete.
@@ -47,8 +50,8 @@ class UserRepository {
 
   /// Updates the last login timestamp.
   Future<void> touchLogin(String uid) async {
-    await _firestore.collection(usersCollection).doc(uid).update({
+    await _firestore.collection(usersCollection).doc(uid).set({
       'lastLoginAt': FieldValue.serverTimestamp(),
-    });
+    }, SetOptions(merge: true));
   }
 }

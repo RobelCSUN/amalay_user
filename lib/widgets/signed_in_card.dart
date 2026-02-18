@@ -20,8 +20,9 @@ class SignedInCard extends StatelessWidget {
       margin: const EdgeInsets.symmetric(horizontal: 24),
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.95),
+        color: Colors.black.withValues(alpha: 0.28),
         borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.22)),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -31,14 +32,14 @@ class SignedInCard extends StatelessWidget {
             style: TextStyle(
               fontSize: 32,
               fontWeight: FontWeight.bold,
-              color: Colors.black87,
+              color: Colors.white,
             ),
           ),
           const SizedBox(height: 8),
           const Text(
             'Just a swipe away from turning quiet weekends into unforgettable moments together.',
             textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 14, color: Colors.black87, height: 1.35),
+            style: TextStyle(fontSize: 14, color: Colors.white70, height: 1.35),
           ),
           const SizedBox(height: 20),
 
@@ -65,7 +66,7 @@ class SignedInCard extends StatelessWidget {
             Text(
               email,
               textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 14, color: Colors.black54),
+              style: const TextStyle(fontSize: 14, color: Colors.white70),
             ),
           ],
 
