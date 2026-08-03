@@ -28,24 +28,38 @@ class AppComponentStyles {
     ),
   ];
 
+  /// Warm glass circle tuned to sit over the sunset hero photo: a soft
+  /// top-light, a gold-tinted rim, and a warm ambient glow.
   static BoxDecoration authProviderDecoration = BoxDecoration(
     shape: BoxShape.circle,
     gradient: const LinearGradient(
       begin: Alignment.topLeft,
       end: Alignment.bottomRight,
-      colors: [AppColors.authProviderHighlight, AppColors.authProviderFill],
+      colors: [
+        Color(0x33FFF3E5),
+        AppColors.authProviderFill,
+        Color(0x59000000),
+      ],
+      stops: [0.0, 0.55, 1.0],
     ),
-    border: Border.all(color: AppColors.authProviderBorder),
+    border: Border.all(color: const Color(0x80F4DCCB), width: 1.2),
     boxShadow: const [
       BoxShadow(
         color: AppColors.authProviderGlow,
-        blurRadius: 16,
+        blurRadius: 18,
         offset: Offset(0, 8),
       ),
       BoxShadow(
-        color: Color(0x22000000),
+        color: Color(0x33000000),
         blurRadius: 6,
         offset: Offset(0, 2),
+      ),
+      // Faint gold halo so the circles feel lit by the sunset.
+      BoxShadow(
+        color: Color(0x26D9A47D),
+        blurRadius: 24,
+        spreadRadius: 1,
+        offset: Offset(0, 0),
       ),
     ],
   );

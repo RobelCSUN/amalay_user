@@ -74,19 +74,9 @@ class AuthCard extends StatelessWidget {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 14,
-                      vertical: 8,
-                    ),
-                    decoration: AppComponentStyles.authCtaBackdrop,
-                    child: const Text(
-                      'Continue with',
-                      style: AppTextStyles.authPrimaryCta,
-                    ),
-                  ),
-                  const SizedBox(height: AppLayout.ctaToProvidersGap),
-                  _iconOnlySignInRow(),
+                  const _ContinueWithDivider(),
+                  const SizedBox(height: AppLayout.ctaToProvidersGap + 6),
+                  _StaggeredEntrance(child: _iconOnlySignInRow()),
                   const SizedBox(height: AppLayout.providersToLegalGap),
                   Text.rich(
                     TextSpan(
@@ -199,6 +189,81 @@ class AuthCard extends StatelessWidget {
       shaderCallback: (Rect bounds) =>
           AppComponentStyles.googleMarkGradient.createShader(bounds),
       child: const Text('G', style: AppTextStyles.googleGlyph),
+    );
+  }
+}
+
+/// Elegant "CONTINUE WITH" treatment: hairline gradient rules flanking
+/// letterspaced small caps, designed to sit softly over the hero photo.
+class _ContinueWithDivider extends StatelessWidget {
+  const _ContinueWithDivider();
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(child: _hairline(reverse: false)),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 14),
+          child: Text(
+            'CONTINUE WITH',
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 3.2,
+              color: AppColors.brandGoldSoft.withValues(alpha: 0.95),
+              shadows: const [
+                Shadow(
+                  color: Color(0x99000000),
+                  blurRadius: 6,
+                  offset: Offset(0, 1),
+                ),
+              ],
+            ),
+          ),
+        ),
+        Expanded(child: _hairline(reverse: true)),
+      ],
+    );
+  }
+
+  Widget _hairline({required bool reverse}) {
+    return Container(
+      height: 1,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: reverse ? Alignment.centerRight : Alignment.centerLeft,
+          end: reverse ? Alignment.centerLeft : Alignment.centerRight,
+          colors: [
+            Colors.transparent,
+            AppColors.brandGoldSoft.withValues(alpha: 0.65),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Fades and floats the provider buttons in one after another on first build.
+class _StaggeredEntrance extends StatelessWidget {
+  final Widget child;
+
+  const _StaggeredEntrance({required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0, end: 1),
+      duration: const Duration(milliseconds: 650),
+      curve: Curves.easeOutCubic,
+      builder: (context, value, child) => Opacity(
+        opacity: value,
+        child: Transform.translate(
+          offset: Offset(0, 18 * (1 - value)),
+          child: child,
+        ),
+      ),
+      child: child,
     );
   }
 }
