@@ -204,16 +204,36 @@ class _CreateProfileScreenState extends State<CreateProfileScreen> {
             children: [
               Padding(
                 padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(4),
-                  child: LinearProgressIndicator(
-                    value: (_step + 1) / _stepCount,
-                    minHeight: 6,
-                    backgroundColor: Colors.white24,
-                    valueColor: const AlwaysStoppedAnimation<Color>(
-                      AppColors.accentRose,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Step ${_step + 1} of $_stepCount',
+                      style: AppTextStyles.legal.copyWith(
+                        fontSize: 12,
+                        letterSpacing: 1.1,
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
-                  ),
+                    const SizedBox(height: 6),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(4),
+                      child: TweenAnimationBuilder<double>(
+                        tween: Tween(end: (_step + 1) / _stepCount),
+                        duration: const Duration(milliseconds: 300),
+                        curve: Curves.easeOutCubic,
+                        builder: (context, value, _) =>
+                            LinearProgressIndicator(
+                          value: value,
+                          minHeight: 6,
+                          backgroundColor: Colors.white24,
+                          valueColor: const AlwaysStoppedAnimation<Color>(
+                            AppColors.accentRose,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
               Expanded(

@@ -1,4 +1,6 @@
 // lib/screens/main/main_shell_screen.dart
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 
 import 'package:amalay_user/app/app_scope.dart';
@@ -7,7 +9,8 @@ import 'package:amalay_user/screens/matches/matches_screen.dart';
 import 'package:amalay_user/screens/profile/my_profile_screen.dart';
 import 'package:amalay_user/theme/app_colors.dart';
 
-/// Free-tier home: Discover, Matches, and your own Profile.
+/// Free-tier home: Discover, Matches, and your own Profile, over a shared
+/// dusk gradient with a frosted-glass navigation bar.
 class MainShellScreen extends StatefulWidget {
   final AppScope scope;
 
@@ -23,49 +26,72 @@ class _MainShellScreenState extends State<MainShellScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF241614),
-      body: IndexedStack(
-        index: _tab,
-        children: [
-          DiscoverScreen(
-            userRepository: widget.scope.userRepository,
-            matchRepository: widget.scope.matchRepository,
-            safetyService: widget.scope.safetyService,
-            locationService: widget.scope.locationService,
+      extendBody: true,
+      body: DecoratedBox(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: AppColors.appBackgroundGradient,
           ),
-          MatchesScreen(
-            matchRepository: widget.scope.matchRepository,
-            safetyService: widget.scope.safetyService,
-          ),
-          MyProfileScreen(
-            authService: widget.scope.authService,
-            userRepository: widget.scope.userRepository,
-            accountLifecycleService: widget.scope.accountLifecycleService,
-          ),
-        ],
+        ),
+        child: IndexedStack(
+          index: _tab,
+          children: [
+            DiscoverScreen(
+              userRepository: widget.scope.userRepository,
+              matchRepository: widget.scope.matchRepository,
+              safetyService: widget.scope.safetyService,
+              locationService: widget.scope.locationService,
+            ),
+            MatchesScreen(
+              matchRepository: widget.scope.matchRepository,
+              safetyService: widget.scope.safetyService,
+            ),
+            MyProfileScreen(
+              authService: widget.scope.authService,
+              userRepository: widget.scope.userRepository,
+              accountLifecycleService: widget.scope.accountLifecycleService,
+            ),
+          ],
+        ),
       ),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: _tab,
-        onDestinationSelected: (index) => setState(() => _tab = index),
-        backgroundColor: const Color(0xFF2E1B18),
-        indicatorColor: AppColors.accentRose.withValues(alpha: 0.35),
-        destinations: const [
-          NavigationDestination(
-            icon: Icon(Icons.favorite_outline, color: Colors.white70),
-            selectedIcon: Icon(Icons.favorite, color: Colors.white),
-            label: 'Discover',
+      bottomNavigationBar: ClipRRect(
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
+          child: Container(
+            decoration: BoxDecoration(
+              color: const Color(0xFF241614).withValues(alpha: 0.72),
+              border: const Border(
+                top: BorderSide(color: AppColors.surfaceOutline),
+              ),
+            ),
+            child: NavigationBar(
+              selectedIndex: _tab,
+              onDestinationSelected: (index) => setState(() => _tab = index),
+              destinations: const [
+                NavigationDestination(
+                  icon: Icon(Icons.style_outlined, color: Colors.white70),
+                  selectedIcon: Icon(Icons.style, color: Colors.white),
+                  label: 'Discover',
+                ),
+                NavigationDestination(
+                  icon: Icon(
+                    Icons.chat_bubble_outline,
+                    color: Colors.white70,
+                  ),
+                  selectedIcon: Icon(Icons.chat_bubble, color: Colors.white),
+                  label: 'Matches',
+                ),
+                NavigationDestination(
+                  icon: Icon(Icons.person_outline, color: Colors.white70),
+                  selectedIcon: Icon(Icons.person, color: Colors.white),
+                  label: 'Profile',
+                ),
+              ],
+            ),
           ),
-          NavigationDestination(
-            icon: Icon(Icons.chat_bubble_outline, color: Colors.white70),
-            selectedIcon: Icon(Icons.chat_bubble, color: Colors.white),
-            label: 'Matches',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.person_outline, color: Colors.white70),
-            selectedIcon: Icon(Icons.person, color: Colors.white),
-            label: 'Profile',
-          ),
-        ],
+        ),
       ),
     );
   }

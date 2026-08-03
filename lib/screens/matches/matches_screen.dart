@@ -142,40 +142,107 @@ class _MatchTile extends StatelessWidget {
     }
   }
 
+  String _relativeTime(DateTime? time) {
+    if (time == null) return '';
+    final diff = DateTime.now().difference(time);
+    if (diff.inMinutes < 60) return 'Matched just now';
+    if (diff.inHours < 24) return 'Matched ${diff.inHours}h ago';
+    if (diff.inDays < 7) return 'Matched ${diff.inDays}d ago';
+    return 'Matched ${(diff.inDays / 7).floor()}w ago';
+  }
+
   @override
   Widget build(BuildContext context) {
+    final isNew = match.createdAt != null &&
+        DateTime.now().difference(match.createdAt!).inHours < 24;
+
     return FutureBuilder<UserProfile?>(
       future: matchRepository.getProfileOf(match.otherUid),
       builder: (context, snapshot) {
         final profile = snapshot.data;
         final name = profile?.firstName ?? '...';
         final subtitle = profile == null
-            ? ''
-            : '${profile.city} • ${profile.activities.take(3).join(', ')}';
+            ? _relativeTime(match.createdAt)
+            : '${profile.city} • ${_relativeTime(match.createdAt)}';
 
         return Container(
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.06),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.white12),
+            color: AppColors.surfaceCard.withValues(alpha: 0.75),
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(
+              color: isNew
+                  ? AppColors.accentRose.withValues(alpha: 0.55)
+                  : AppColors.surfaceOutline,
+            ),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x33000000),
+                blurRadius: 10,
+                offset: Offset(0, 4),
+              ),
+            ],
           ),
           child: ListTile(
-            leading: CircleAvatar(
-              backgroundColor: AppColors.accentRose,
-              child: Text(
-                name.isEmpty ? '?' : name[0].toUpperCase(),
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w700,
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 14,
+              vertical: 6,
+            ),
+            leading: Container(
+              padding: const EdgeInsets.all(2.5),
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: LinearGradient(
+                  colors: isNew
+                      ? AppColors.premiumGradient
+                      : [Colors.white24, Colors.white10],
+                ),
+              ),
+              child: CircleAvatar(
+                backgroundColor: AppColors.accentRose,
+                child: Text(
+                  name.isEmpty ? '?' : name[0].toUpperCase(),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
               ),
             ),
-            title: Text(
-              name,
-              style: AppTextStyles.heroBody.copyWith(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-              ),
+            title: Row(
+              children: [
+                Flexible(
+                  child: Text(
+                    name,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTextStyles.heroBody.copyWith(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+                if (isNew) ...[
+                  const SizedBox(width: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 7,
+                      vertical: 2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppColors.accentRose,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Text(
+                      'NEW',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 10,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 0.8,
+                      ),
+                    ),
+                  ),
+                ],
+              ],
             ),
             subtitle: subtitle.isEmpty
                 ? null

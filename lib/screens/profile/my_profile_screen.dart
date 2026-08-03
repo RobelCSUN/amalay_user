@@ -141,17 +141,28 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
             if (profile != null) ...[
               Row(
                 children: [
-                  CircleAvatar(
-                    radius: 34,
-                    backgroundColor: AppColors.accentRose,
-                    child: Text(
-                      profile.firstName.isEmpty
-                          ? '?'
-                          : profile.firstName[0].toUpperCase(),
-                      style: const TextStyle(
-                        fontSize: 30,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.white,
+                  Container(
+                    padding: const EdgeInsets.all(3),
+                    decoration: const BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: LinearGradient(
+                        colors: AppColors.premiumGradient,
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                    ),
+                    child: CircleAvatar(
+                      radius: 34,
+                      backgroundColor: AppColors.accentRose,
+                      child: Text(
+                        profile.firstName.isEmpty
+                            ? '?'
+                            : profile.firstName[0].toUpperCase(),
+                        style: const TextStyle(
+                          fontSize: 30,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white,
+                        ),
                       ),
                     ),
                   ),
@@ -167,7 +178,21 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
                             fontSize: 22,
                           ),
                         ),
-                        Text(profile.city, style: AppTextStyles.heroBody),
+                        const SizedBox(height: 2),
+                        Row(
+                          children: [
+                            const Icon(
+                              Icons.location_on_outlined,
+                              size: 15,
+                              color: Colors.white70,
+                            ),
+                            const SizedBox(width: 3),
+                            Text(
+                              profile.city,
+                              style: AppTextStyles.heroBody,
+                            ),
+                          ],
+                        ),
                       ],
                     ),
                   ),
@@ -176,39 +201,76 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
               const SizedBox(height: 20),
               Container(
                 width: double.infinity,
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(1.4),
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.06),
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: Colors.white12),
+                  gradient: const LinearGradient(
+                    colors: AppColors.premiumGradient,
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(18),
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        const Icon(
-                          Icons.workspace_premium_outlined,
-                          color: AppColors.accentWarm,
-                          size: 20,
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          'Free plan',
-                          style: AppTextStyles.heroBody.copyWith(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: AppColors.surfaceCard,
+                    borderRadius: BorderRadius.circular(17),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          ShaderMask(
+                            shaderCallback: (bounds) => const LinearGradient(
+                              colors: AppColors.premiumGradient,
+                            ).createShader(bounds),
+                            child: const Icon(
+                              Icons.workspace_premium,
+                              color: Colors.white,
+                              size: 22,
+                            ),
                           ),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Amalay Premium',
+                            style: AppTextStyles.heroBody.copyWith(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          const Spacer(),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 9,
+                              vertical: 3,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.10),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Text(
+                              'Free plan',
+                              style: AppTextStyles.legal.copyWith(
+                                fontSize: 12,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Unlimited likes, see who liked you, and more. '
+                        'Weekly, monthly, and yearly plans — coming soon.',
+                        style: AppTextStyles.legal.copyWith(
+                          fontSize: 13,
+                          height: 1.4,
                         ),
-                      ],
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      'Unlimited likes and more with Amalay Premium — '
-                      'coming soon.',
-                      style: AppTextStyles.legal.copyWith(fontSize: 13),
-                    ),
-                  ],
+                      ),
+                    ],
+                  ),
                 ),
               ),
               const SizedBox(height: 20),
