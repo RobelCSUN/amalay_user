@@ -26,7 +26,7 @@ dependencies:
   cloud_functions: ^5.1.5
 
   # Apple Sign-In
-  sign_in_with_apple: ^5.0.0
+  sign_in_with_apple: ^7.0.1
 
   # Facebook Sign-In
   flutter_facebook_auth: ^7.1.1
