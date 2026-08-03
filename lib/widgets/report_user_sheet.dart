@@ -76,18 +76,24 @@ class _ReportSheetState extends State<_ReportSheet> {
             style: TextStyle(color: Colors.white70, fontSize: 13),
           ),
           const SizedBox(height: 16),
-          ...kReportReasons.map(
-            (reason) => RadioListTile<String>(
-              value: reason,
-              groupValue: _reason,
-              onChanged: (value) => setState(() => _reason = value),
-              title: Text(
-                reason,
-                style: const TextStyle(color: Colors.white, fontSize: 15),
-              ),
-              activeColor: AppColors.accentRose,
-              contentPadding: EdgeInsets.zero,
-              dense: true,
+          RadioGroup<String>(
+            groupValue: _reason,
+            onChanged: (value) => setState(() => _reason = value),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                for (final reason in kReportReasons)
+                  RadioListTile<String>(
+                    value: reason,
+                    title: Text(
+                      reason,
+                      style: const TextStyle(color: Colors.white, fontSize: 15),
+                    ),
+                    activeColor: AppColors.accentRose,
+                    contentPadding: EdgeInsets.zero,
+                    dense: true,
+                  ),
+              ],
             ),
           ),
           const SizedBox(height: 8),
@@ -108,7 +114,7 @@ class _ReportSheetState extends State<_ReportSheet> {
               'Also block this user',
               style: TextStyle(color: Colors.white, fontSize: 15),
             ),
-            activeColor: AppColors.accentRose,
+            activeThumbColor: AppColors.accentRose,
             contentPadding: EdgeInsets.zero,
           ),
           const SizedBox(height: 12),
