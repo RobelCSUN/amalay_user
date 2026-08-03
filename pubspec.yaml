@@ -24,10 +24,11 @@ dependencies:
 
   cloud_firestore: ^5.5.0
 
-  flutter_signin_button: ^2.0.0
-
   # Apple Sign-In
   sign_in_with_apple: ^5.0.0
+
+  # Facebook Sign-In
+  flutter_facebook_auth: ^7.1.1
 
 dev_dependencies:
   flutter_test:

@@ -7,7 +7,6 @@ import 'package:amalay_user/app/app_routes.dart';
 import 'package:amalay_user/repositories/user_repository.dart';
 import 'package:amalay_user/services/auth/auth_service.dart';
 import 'package:amalay_user/widgets/auth_card.dart';
-import 'package:amalay_user/widgets/signed_in_card.dart';
 import 'package:amalay_user/widgets/themed_background.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -82,7 +81,9 @@ class _HomeScreenState extends State<HomeScreen> {
         _isResolvingSession = false;
       });
 
-      if (!profileComplete) {
+      if (profileComplete) {
+        _goToMainShell();
+      } else {
         await _startProfileFlowIfNeeded();
       }
     } catch (e) {
@@ -157,26 +158,40 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _handleFacebook() async {
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Facebook sign-in will be enabled in the next milestone.'),
-      ),
-    );
-  }
+    if (mounted) ScaffoldMessenger.of(context).clearSnackBars();
 
-  Future<void> _signOut() async {
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).clearSnackBars();
     try {
-      await _authService.signOut();
-    } catch (e) {
-      debugPrint('[Auth] signOut ERROR: $e');
+      debugPrint('[Auth] Facebook sign-in: start');
+      final credential = await _authService.signInWithFacebook();
+      final hasActiveUser = FirebaseAuth.instance.currentUser != null;
+      if (credential == null && !hasActiveUser) {
+        return; // user canceled
+      }
+      debugPrint('[Auth] Facebook sign-in: success');
+    } on FirebaseAuthException catch (e) {
+      if (e.code == 'canceled') return;
+      debugPrint('[Auth] Facebook sign-in ERROR: ${e.code} ${e.message}');
       if (!mounted) return;
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text('Sign out failed')));
+      ).showSnackBar(const SnackBar(content: Text('Facebook sign-in failed')));
+    } catch (e) {
+      debugPrint('[Auth] Facebook sign-in ERROR: $e');
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Facebook sign-in failed')));
     }
+  }
+
+  bool _navigatedToShell = false;
+
+  void _goToMainShell() {
+    if (!mounted || _navigatedToShell) return;
+    _navigatedToShell = true;
+    Navigator.of(
+      context,
+    ).pushNamedAndRemoveUntil(AppRoutes.mainShell, (route) => false);
   }
 
   Future<void> _startProfileFlowIfNeeded() async {
@@ -198,6 +213,7 @@ class _HomeScreenState extends State<HomeScreen> {
       setState(() {
         _isProfileComplete = true;
       });
+      _goToMainShell();
       return;
     }
 
@@ -206,6 +222,7 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() {
       _isProfileComplete = profileComplete;
     });
+    if (profileComplete) _goToMainShell();
   }
 
   @override
@@ -273,10 +290,7 @@ class _HomeScreenState extends State<HomeScreen> {
       );
     }
 
-    return SafeArea(
-      child: Center(
-        child: SignedInCard(user: user, onSignOut: _signOut),
-      ),
-    );
+    // Profile complete: navigation to the main shell is in flight.
+    return const SafeArea(child: Center(child: CircularProgressIndicator()));
   }
 }

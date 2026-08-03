@@ -1,10 +1,11 @@
 import 'dart:io' show Platform;
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 
 class AuthService {
-  final FirebaseAuth _auth = FirebaseAuth.instance;
+  FirebaseAuth get _auth => FirebaseAuth.instance;
   final GoogleSignIn _google = GoogleSignIn();
 
   Stream<User?> get authStateChanges => _auth.authStateChanges();
@@ -67,9 +68,45 @@ class AuthService {
     return _auth.signInWithCredential(cred);
   }
 
+  /// Sign in with Facebook (Meta).
+  /// Returns null if the user cancels the login sheet.
+  Future<UserCredential?> signInWithFacebook() async {
+    if (_auth.currentUser != null) return null;
+
+    final LoginResult result = await FacebookAuth.instance.login(
+      permissions: const ['email', 'public_profile'],
+    );
+
+    switch (result.status) {
+      case LoginStatus.success:
+        final token = result.accessToken;
+        if (token == null) {
+          throw FirebaseAuthException(
+            code: 'missing-facebook-token',
+            message: 'Facebook returned no access token.',
+          );
+        }
+        final OAuthCredential cred = FacebookAuthProvider.credential(
+          token.tokenString,
+        );
+        return _auth.signInWithCredential(cred);
+      case LoginStatus.cancelled:
+        return null; // user cancelled -> not an error
+      case LoginStatus.failed:
+      case LoginStatus.operationInProgress:
+        throw FirebaseAuthException(
+          code: 'facebook-login-failed',
+          message: result.message ?? 'Facebook sign-in failed.',
+        );
+    }
+  }
+
   Future<void> signOut() async {
     try {
       await _google.signOut();
+    } catch (_) {}
+    try {
+      await FacebookAuth.instance.logOut();
     } catch (_) {}
     await _auth.signOut();
   }
