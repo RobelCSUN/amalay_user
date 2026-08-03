@@ -1,0 +1,12 @@
+{
+  "name": "amalay-rules-tests",
+  "private": true,
+  "description": "Firestore security rules unit tests (run inside the emulator)",
+  "scripts": {
+    "test": "firebase emulators:exec --project amalay-a8a15 --only firestore \"node --test\""
+  },
+  "devDependencies": {
+    "@firebase/rules-unit-testing": "^4.0.1",
+    "firebase-tools": "^13.35.1"
+  }
+}

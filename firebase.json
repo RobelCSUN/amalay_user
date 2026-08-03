@@ -1,1 +1,47 @@
-{"flutter":{"platforms":{"android":{"default":{"projectId":"amalay-a8a15","appId":"1:1060824257263:android:69b4902c2dd82307cfc11a","fileOutput":"android/app/google-services.json"}},"ios":{"default":{"projectId":"amalay-a8a15","appId":"1:1060824257263:ios:40d77a7825f21aaecfc11a","uploadDebugSymbols":false,"fileOutput":"ios/Runner/GoogleService-Info.plist"}},"dart":{"lib/firebase_options.dart":{"projectId":"amalay-a8a15","configurations":{"android":"1:1060824257263:android:69b4902c2dd82307cfc11a","ios":"1:1060824257263:ios:40d77a7825f21aaecfc11a"}}}}}}
+{
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "amalay-a8a15",
+          "appId": "1:1060824257263:android:69b4902c2dd82307cfc11a",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "ios": {
+        "default": {
+          "projectId": "amalay-a8a15",
+          "appId": "1:1060824257263:ios:40d77a7825f21aaecfc11a",
+          "uploadDebugSymbols": false,
+          "fileOutput": "ios/Runner/GoogleService-Info.plist"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "amalay-a8a15",
+          "configurations": {
+            "android": "1:1060824257263:android:69b4902c2dd82307cfc11a",
+            "ios": "1:1060824257263:ios:40d77a7825f21aaecfc11a"
+          }
+        }
+      }
+    }
+  },
+  "functions": {
+    "source": "functions"
+  },
+  "firestore": {
+    "rules": "firestore.rules",
+    "indexes": "firestore.indexes.json"
+  },
+  "storage": {
+    "rules": "storage.rules"
+  },
+  "emulators": {
+    "auth": { "port": 9099 },
+    "functions": { "port": 5001 },
+    "firestore": { "port": 8080 },
+    "storage": { "port": 9199 },
+    "ui": { "enabled": true, "port": 4000 }
+  }
+}
