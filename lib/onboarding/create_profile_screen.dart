@@ -6,6 +6,7 @@ import 'package:amalay_user/app/app_routes.dart';
 import 'package:amalay_user/models/user_profile.dart';
 import 'package:amalay_user/repositories/user_repository.dart';
 import 'package:amalay_user/services/auth/auth_service.dart';
+import 'package:amalay_user/services/geo/location_service.dart';
 import 'package:amalay_user/theme/app_colors.dart';
 import 'package:amalay_user/theme/app_text_styles.dart';
 import 'package:amalay_user/widgets/themed_background.dart';
@@ -139,6 +140,12 @@ class _CreateProfileScreenState extends State<CreateProfileScreen> {
     try {
       await user.updateDisplayName(profile.firstName);
       await widget.userRepository.saveProfile(user.uid, profile);
+
+      // Best-effort GPS capture for geo matching; the app works without it.
+      final location = await LocationService().getCurrentLocation();
+      if (location != null) {
+        await widget.userRepository.saveLocation(user.uid, location);
+      }
 
       if (!mounted) return;
       Navigator.of(context).pop(true);

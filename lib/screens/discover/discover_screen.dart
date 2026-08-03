@@ -5,20 +5,28 @@ import 'package:flutter/material.dart';
 import 'package:amalay_user/models/user_profile.dart';
 import 'package:amalay_user/repositories/match_repository.dart';
 import 'package:amalay_user/repositories/user_repository.dart';
+import 'package:amalay_user/services/geo/geo_utils.dart';
+import 'package:amalay_user/services/geo/location_service.dart';
 import 'package:amalay_user/services/likes/like_quota.dart';
+import 'package:amalay_user/services/safety/safety_service.dart';
 import 'package:amalay_user/theme/app_colors.dart';
 import 'package:amalay_user/theme/app_text_styles.dart';
+import 'package:amalay_user/widgets/report_user_sheet.dart';
 
-/// Free-tier discovery feed: profile cards with like/pass and a daily like
-/// limit for free users.
+/// Free-tier discovery feed: profile cards with like/pass, geo distance,
+/// and the server-enforced daily like limit.
 class DiscoverScreen extends StatefulWidget {
   final UserRepository userRepository;
   final MatchRepository matchRepository;
+  final SafetyService safetyService;
+  final LocationService locationService;
 
   const DiscoverScreen({
     super.key,
     required this.userRepository,
     required this.matchRepository,
+    required this.safetyService,
+    required this.locationService,
   });
 
   @override
@@ -30,8 +38,9 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
   int _index = 0;
   bool _loading = true;
   bool _acting = false;
-  LikeQuota _quota = const LikeQuota(likesToday: 0, resetAt: null);
+  int _remainingLikes = LikeQuota.freeDailyLimit;
   bool _isPremium = false;
+  GeoPointData? _myLocation;
   String? _error;
 
   String? get _uid => FirebaseAuth.instance.currentUser?.uid;
@@ -55,17 +64,31 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
       final profile = await widget.userRepository.getProfile(uid);
       final quota = await widget.userRepository.getLikeQuota(uid);
       final premium = await widget.userRepository.isPremium(uid);
+      final blocked = await widget.safetyService.getBlockedUids(uid);
+
+      // Refresh GPS in the background of the feed load; stored location is
+      // the fallback when permission is denied.
+      var myLocation = await widget.locationService.getCurrentLocation();
+      if (myLocation != null) {
+        await widget.userRepository.saveLocation(uid, myLocation);
+      } else {
+        myLocation = await widget.userRepository.getLocation(uid);
+      }
+
       final candidates = await widget.matchRepository.getDiscoveryCandidates(
         currentUid: uid,
         lookingFor: profile?.lookingFor ?? const [],
+        blockedUids: blocked,
+        myLocation: myLocation,
       );
 
       if (!mounted) return;
       setState(() {
         _candidates = candidates;
         _index = 0;
-        _quota = quota;
+        _remainingLikes = quota.remaining(DateTime.now(), isPremium: premium);
         _isPremium = premium;
+        _myLocation = myLocation;
         _loading = false;
       });
     } catch (e) {
@@ -82,32 +105,20 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
       _index < _candidates.length ? _candidates[_index] : null;
 
   Future<void> _like() async {
-    final uid = _uid;
     final candidate = _current;
-    if (uid == null || candidate == null || _acting) return;
-
-    final now = DateTime.now();
-    if (!_quota.canLike(now, isPremium: _isPremium)) {
-      _showLimitReached();
-      return;
-    }
+    if (candidate == null || _acting) return;
 
     setState(() => _acting = true);
     try {
-      final isMatch = await widget.matchRepository.sendLike(
-        uid,
-        candidate.uid,
-      );
-      final newQuota = _quota.afterLike(now);
-      await widget.userRepository.saveLikeQuota(uid, newQuota);
+      final result = await widget.matchRepository.sendLike(candidate.uid);
 
       if (!mounted) return;
       setState(() {
-        _quota = newQuota;
+        _remainingLikes = result.remainingLikes;
         _index += 1;
       });
 
-      if (isMatch) {
+      if (result.isMatch) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
@@ -117,6 +128,8 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
           ),
         );
       }
+    } on LikeLimitReachedException {
+      if (mounted) _showLimitReached();
     } catch (e) {
       debugPrint('[Discover] like failed: $e');
       if (mounted) {
@@ -130,13 +143,12 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
   }
 
   Future<void> _pass() async {
-    final uid = _uid;
     final candidate = _current;
-    if (uid == null || candidate == null || _acting) return;
+    if (candidate == null || _acting) return;
 
     setState(() => _acting = true);
     try {
-      await widget.matchRepository.sendPass(uid, candidate.uid);
+      await widget.matchRepository.sendPass(candidate.uid);
       if (!mounted) return;
       setState(() => _index += 1);
     } catch (e) {
@@ -146,7 +158,55 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
     }
   }
 
+  Future<void> _reportOrBlock() async {
+    final uid = _uid;
+    final candidate = _current;
+    if (uid == null || candidate == null) return;
+
+    final action = await showReportUserSheet(
+      context,
+      userName: candidate.profile.firstName,
+    );
+    if (action == null || !mounted) return;
+
+    try {
+      if (action.block) {
+        await widget.safetyService.blockUser(
+          uid: uid,
+          blockedUid: candidate.uid,
+        );
+      }
+      if (action.reason != null) {
+        await widget.safetyService.reportUser(
+          reporterUid: uid,
+          reportedUid: candidate.uid,
+          reason: action.reason!,
+          details: action.details,
+        );
+      }
+      if (!mounted) return;
+      setState(() => _index += 1);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            action.block
+                ? '${candidate.profile.firstName} has been blocked.'
+                : 'Report submitted. Thank you for keeping Amalay safe.',
+          ),
+        ),
+      );
+    } catch (e) {
+      debugPrint('[Discover] report/block failed: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not complete that. Try again.')),
+        );
+      }
+    }
+  }
+
   void _showLimitReached() {
+    setState(() => _remainingLikes = 0);
     showDialog<void>(
       context: context,
       builder: (context) => AlertDialog(
@@ -168,8 +228,6 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final remaining = _quota.remaining(DateTime.now(), isPremium: _isPremium);
-
     return SafeArea(
       child: RefreshIndicator(
         onRefresh: _load,
@@ -198,7 +256,7 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                       child: Text(
                         _isPremium
                             ? 'Premium'
-                            : '$remaining likes left today',
+                            : '$_remainingLikes likes left today',
                         style: AppTextStyles.legal.copyWith(
                           fontSize: 13,
                           color: Colors.white,
@@ -250,30 +308,39 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
     }
     return _ProfileCard(
       candidate: candidate,
+      myLocation: _myLocation,
       acting: _acting,
       onLike: _like,
       onPass: _pass,
+      onReport: _reportOrBlock,
     );
   }
 }
 
 class _ProfileCard extends StatelessWidget {
   final DiscoveryCandidate candidate;
+  final GeoPointData? myLocation;
   final bool acting;
   final VoidCallback onLike;
   final VoidCallback onPass;
+  final VoidCallback onReport;
 
   const _ProfileCard({
     required this.candidate,
+    required this.myLocation,
     required this.acting,
     required this.onLike,
     required this.onPass,
+    required this.onReport,
   });
 
   @override
   Widget build(BuildContext context) {
     final UserProfile profile = candidate.profile;
     final age = profile.ageOn(DateTime.now());
+    final distance = (myLocation != null && candidate.location != null)
+        ? distanceKm(myLocation!, candidate.location!)
+        : null;
 
     return Column(
       children: [
@@ -294,19 +361,33 @@ class _ProfileCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  CircleAvatar(
-                    radius: 44,
-                    backgroundColor: AppColors.accentRose,
-                    child: Text(
-                      profile.firstName.isEmpty
-                          ? '?'
-                          : profile.firstName[0].toUpperCase(),
-                      style: const TextStyle(
-                        fontSize: 40,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.white,
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      CircleAvatar(
+                        radius: 44,
+                        backgroundColor: AppColors.accentRose,
+                        child: Text(
+                          profile.firstName.isEmpty
+                              ? '?'
+                              : profile.firstName[0].toUpperCase(),
+                          style: const TextStyle(
+                            fontSize: 40,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white,
+                          ),
+                        ),
                       ),
-                    ),
+                      const Spacer(),
+                      IconButton(
+                        onPressed: onReport,
+                        tooltip: 'Report or block',
+                        icon: const Icon(
+                          Icons.flag_outlined,
+                          color: Colors.white54,
+                        ),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 16),
                   Text(
@@ -322,7 +403,12 @@ class _ProfileCard extends StatelessWidget {
                         color: Colors.white70,
                       ),
                       const SizedBox(width: 4),
-                      Text(profile.city, style: AppTextStyles.heroBody),
+                      Text(
+                        distance == null
+                            ? profile.city
+                            : '${profile.city} • ${distanceLabel(distance)}',
+                        style: AppTextStyles.heroBody,
+                      ),
                     ],
                   ),
                   const SizedBox(height: 16),

@@ -30,11 +30,17 @@ class _MainShellScreenState extends State<MainShellScreen> {
           DiscoverScreen(
             userRepository: widget.scope.userRepository,
             matchRepository: widget.scope.matchRepository,
+            safetyService: widget.scope.safetyService,
+            locationService: widget.scope.locationService,
           ),
-          MatchesScreen(matchRepository: widget.scope.matchRepository),
+          MatchesScreen(
+            matchRepository: widget.scope.matchRepository,
+            safetyService: widget.scope.safetyService,
+          ),
           MyProfileScreen(
             authService: widget.scope.authService,
             userRepository: widget.scope.userRepository,
+            accountLifecycleService: widget.scope.accountLifecycleService,
           ),
         ],
       ),

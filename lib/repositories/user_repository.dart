@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 import 'package:amalay_user/models/user_profile.dart';
+import 'package:amalay_user/services/geo/geo_utils.dart';
 import 'package:amalay_user/services/likes/like_quota.dart';
 
 class UserRepository {
@@ -26,22 +27,28 @@ class UserRepository {
         'email': user.email,
         'createdAt': FieldValue.serverTimestamp(),
         'profileComplete': false,
+        'accountStatus': 'active',
         'isPremium': false,
-        'likesToday': 0,
-        'likesResetAt': null,
+        'blocked': <String>[],
       });
     }
   }
 
-  /// Saves the completed onboarding profile and marks the account ready to
-  /// use the free tier.
+  /// Saves the completed onboarding profile.
   Future<void> saveProfile(String uid, UserProfile profile) async {
     await _userDoc(uid).set({
       'displayName': profile.firstName,
       'profile': profile.toMap(),
       'profileComplete': true,
-      'isPremium': false,
       'updatedAt': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
+  }
+
+  /// Stores the user's last known location for geo matching.
+  Future<void> saveLocation(String uid, GeoPointData location) async {
+    await _userDoc(uid).set({
+      'location': location.toMap(),
+      'locationUpdatedAt': FieldValue.serverTimestamp(),
     }, SetOptions(merge: true));
   }
 
@@ -53,6 +60,12 @@ class UserRepository {
     return data?['profileComplete'] == true;
   }
 
+  /// The account lifecycle status ('active' unless changed server-side).
+  Future<String> getAccountStatus(String uid) async {
+    final doc = await _userDoc(uid).get();
+    return (doc.data()?['accountStatus'] as String?) ?? 'active';
+  }
+
   /// Reads the user's profile, or null if onboarding never finished.
   Future<UserProfile?> getProfile(String uid) async {
     final doc = await _userDoc(uid).get();
@@ -61,7 +74,16 @@ class UserRepository {
     );
   }
 
-  /// Reads the current like quota state from the user doc.
+  /// Reads the user's stored location, if any.
+  Future<GeoPointData?> getLocation(String uid) async {
+    final doc = await _userDoc(uid).get();
+    return GeoPointData.fromMap(
+      (doc.data()?['location'] as Map?)?.cast<String, dynamic>(),
+    );
+  }
+
+  /// Reads the like quota for display. The server is the enforcement point;
+  /// this only seeds the counter shown in the UI.
   Future<LikeQuota> getLikeQuota(String uid) async {
     final doc = await _userDoc(uid).get();
     final data = doc.data();
@@ -75,16 +97,6 @@ class UserRepository {
   Future<bool> isPremium(String uid) async {
     final doc = await _userDoc(uid).get();
     return doc.data()?['isPremium'] == true;
-  }
-
-  /// Persists the like quota after a like is spent.
-  Future<void> saveLikeQuota(String uid, LikeQuota quota) async {
-    await _userDoc(uid).set({
-      'likesToday': quota.likesToday,
-      'likesResetAt': quota.resetAt == null
-          ? null
-          : Timestamp.fromDate(quota.resetAt!),
-    }, SetOptions(merge: true));
   }
 
   /// Updates the last login timestamp.

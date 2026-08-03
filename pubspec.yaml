@@ -23,12 +23,16 @@ dependencies:
   google_sign_in: ^6.1.5
 
   cloud_firestore: ^5.5.0
+  cloud_functions: ^5.1.5
 
   # Apple Sign-In
   sign_in_with_apple: ^5.0.0
 
   # Facebook Sign-In
   flutter_facebook_auth: ^7.1.1
+
+  # Location for geo matching
+  geolocator: ^13.0.1
 
 dev_dependencies:
   flutter_test:

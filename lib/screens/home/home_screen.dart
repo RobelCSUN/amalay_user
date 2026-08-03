@@ -71,6 +71,25 @@ class _HomeScreenState extends State<HomeScreen> {
       // Keep user document lifecycle consistent regardless of auth provider.
       await _userRepository.ensureUserDoc(user);
       await _userRepository.touchLogin(user.uid);
+
+      // Deactivated / pending-deletion accounts don't get past the gate.
+      final accountStatus = await _userRepository.getAccountStatus(user.uid);
+      if (accountStatus != 'active') {
+        await _authService.signOut();
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              accountStatus == 'deactivated'
+                  ? 'This account has been deactivated. Contact support to '
+                        'appeal.'
+                  : 'This account is scheduled for deletion.',
+            ),
+          ),
+        );
+        return;
+      }
+
       final profileComplete = await _userRepository.isProfileComplete(user.uid);
 
       if (!mounted) return;
