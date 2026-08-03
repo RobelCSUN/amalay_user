@@ -66,6 +66,8 @@
   <string>$(FLUTTER_BUILD_NUMBER)</string>
   <key>LSRequiresIPhoneOS</key>
   <true/>
+  <key>NSLocationWhenInUseUsageDescription</key>
+  <string>Amalay uses your location to show you people nearby. Your exact location is never shown to other users.</string>
   <key>NSUserTrackingUsageDescription</key>
   <string>This identifier will be used to sign in with Apple.</string>
   <key>UIApplicationSupportsIndirectInputEvents</key>
