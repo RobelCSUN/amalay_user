@@ -1,0 +1,92 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isSelf(uid) {
+      return signedIn() && request.auth.uid == uid;
+    }
+
+    function isAdmin() {
+      return signedIn() &&
+        (request.auth.token.admin == true ||
+         request.auth.token.support_admin == true);
+    }
+
+    function isActiveAccount() {
+      return signedIn() &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid))
+          .data.get('accountStatus', 'active') == 'active';
+    }
+
+    // Fields only Cloud Functions may write.
+    function protectedUserFieldsUnchanged() {
+      let protected = ['accountStatus', 'accountStatusUpdatedAt', 'isPremium',
+                       'premiumUntil', 'premiumPlan', 'likesToday',
+                       'likesResetAt', 'deletionRequestedAt',
+                       'deletionEffectiveAt'];
+      return !request.resource.data.diff(resource.data)
+        .affectedKeys().hasAny(protected.toSet());
+    }
+
+    match /users/{uid} {
+      // Members can read other active, completed profiles (discovery);
+      // admins can read anyone; users can always read themselves.
+      allow read: if isSelf(uid) || isAdmin() ||
+        (signedIn() &&
+         resource.data.get('profileComplete', false) == true &&
+         resource.data.get('accountStatus', 'active') == 'active');
+
+      allow create: if isSelf(uid) &&
+        request.resource.data.uid == uid &&
+        request.resource.data.get('isPremium', false) == false &&
+        request.resource.data.get('accountStatus', 'active') == 'active';
+
+      allow update: if isSelf(uid) && protectedUserFieldsUnchanged();
+
+      // Deletion is a server-side lifecycle operation.
+      allow delete: if false;
+    }
+
+    // Likes and matches are written exclusively by Cloud Functions.
+    match /likes/{likeId} {
+      allow read: if signedIn() && resource.data.from == request.auth.uid;
+      allow write: if false;
+    }
+
+    match /matches/{matchId} {
+      allow read: if signedIn() && request.auth.uid in resource.data.members;
+      allow write: if false;
+    }
+
+    match /reports/{reportId} {
+      allow create: if isActiveAccount() &&
+        request.resource.data.reporterUid == request.auth.uid &&
+        request.resource.data.reportedUid is string &&
+        request.resource.data.reportedUid != request.auth.uid &&
+        request.resource.data.status == 'pending' &&
+        request.resource.data.reason is string &&
+        request.resource.data.reason.size() >= 3;
+      allow read, update: if isAdmin();
+      allow delete: if false;
+    }
+
+    match /adminLogs/{logId} {
+      allow read: if isAdmin();
+      allow write: if false;
+    }
+
+    match /config/{docId} {
+      allow read: if isAdmin();
+      allow write: if false;
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

@@ -104,6 +104,54 @@ class AppTheme {
       snackBarTheme: SnackBarThemeData(
         backgroundColor: Colors.black.withValues(alpha: 0.80),
         contentTextStyle: const TextStyle(color: Colors.white),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+      ),
+      dialogTheme: DialogThemeData(
+        backgroundColor: AppColors.surfaceElevated,
+        surfaceTintColor: Colors.transparent,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
+        titleTextStyle: const TextStyle(
+          color: AppColors.primaryText,
+          fontSize: 20,
+          fontWeight: FontWeight.w700,
+        ),
+        contentTextStyle: const TextStyle(
+          color: AppColors.secondaryText,
+          fontSize: 15,
+          height: 1.4,
+        ),
+      ),
+      popupMenuTheme: PopupMenuThemeData(
+        color: AppColors.surfaceElevated,
+        surfaceTintColor: Colors.transparent,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        textStyle: const TextStyle(color: AppColors.primaryText, fontSize: 15),
+      ),
+      bottomSheetTheme: const BottomSheetThemeData(
+        backgroundColor: AppColors.surfaceElevated,
+        surfaceTintColor: Colors.transparent,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+      ),
+      navigationBarTheme: NavigationBarThemeData(
+        backgroundColor: Colors.transparent,
+        indicatorColor: AppColors.accentRose.withValues(alpha: 0.32),
+        elevation: 0,
+        height: 68,
+        labelTextStyle: WidgetStatePropertyAll(
+          TextStyle(
+            color: Colors.white.withValues(alpha: 0.85),
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ),
+      datePickerTheme: const DatePickerThemeData(
+        backgroundColor: AppColors.surfaceElevated,
+        surfaceTintColor: Colors.transparent,
+        headerForegroundColor: AppColors.primaryText,
       ),
     );
   }
